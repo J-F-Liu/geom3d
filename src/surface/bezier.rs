@@ -3,6 +3,7 @@ use crate::basis::bernstein;
 use crate::{Float, Point3, Point4};
 use grid::Grid;
 
+#[derive(Debug)]
 pub struct BezierSurface<P> {
     pub control_points: Grid<P>,
 }

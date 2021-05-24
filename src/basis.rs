@@ -5,10 +5,11 @@ pub fn create_parameters(parameter_range: (Float, Float), count: usize) -> Vec<F
     let step = (end - begin) / (count - 1) as Float;
     let mut parameters = Vec::with_capacity(count);
     let mut u = begin;
-    for _ in 0..count {
+    for _ in 0..count - 1 {
         parameters.push(u);
         u += step;
     }
+    parameters.push(end);
     parameters
 }
 
@@ -16,7 +17,7 @@ pub fn create_parameters(parameter_range: (Float, Float), count: usize) -> Vec<F
 pub fn bernstein(n: usize, u: Float) -> Vec<Float> {
     let u1 = 1.0 - u;
     let mut values = vec![0.0; n];
-    values[1] = 1.0;
+    values[0] = 1.0;
 
     for j in 1..n {
         let mut saved = 0.0;

@@ -9,6 +9,7 @@ pub trait Curve {
     fn get_point(&self, u: Float) -> Point3;
 }
 
+#[derive(Debug)]
 pub struct CurveSegment<C: Curve> {
     pub curve: C,
     pub parameter_range: (Float, Float),

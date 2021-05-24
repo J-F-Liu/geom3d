@@ -2,6 +2,7 @@ use super::Curve;
 use crate::basis::bernstein;
 use crate::{Float, Point3, Point4};
 
+#[derive(Debug)]
 pub struct BezierCurve<P> {
     pub control_points: Vec<P>,
 }

@@ -7,3 +7,5 @@ pub type Point4 = Vec4;
 mod basis;
 pub mod curve;
 pub mod surface;
+
+pub use grid::{grid, Grid};

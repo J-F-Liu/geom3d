@@ -10,6 +10,7 @@ pub trait Surface {
     fn get_point(&self, u: Float, v: Float) -> Point3;
 }
 
+#[derive(Debug)]
 pub struct SurfacePatch<S: Surface> {
     pub surface: S,
     pub parameter_range: ((Float, Float), (Float, Float)),
