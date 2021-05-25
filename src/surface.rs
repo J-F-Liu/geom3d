@@ -1,5 +1,5 @@
 use crate::basis::create_parameters;
-use crate::{Float, Point3};
+use crate::{Float, Point3, TriangleMesh};
 use grid::Grid;
 
 mod bezier;
@@ -10,10 +10,18 @@ pub trait Surface {
     fn get_point(&self, u: Float, v: Float) -> Point3;
 }
 
+impl Surface for Box<dyn Surface> {
+    fn get_point(&self, u: Float, v: Float) -> Point3 {
+        self.as_ref().get_point(u, v)
+    }
+}
+
 #[derive(Debug)]
 pub struct SurfacePatch<S: Surface> {
     pub surface: S,
+    /// (u_range, v_range)
     pub parameter_range: ((Float, Float), (Float, Float)),
+    /// (u_division, v_division)
     pub parameter_division: (usize, usize),
 }
 
@@ -33,6 +41,10 @@ impl<S: Surface> SurfacePatch<S> {
             })
             .flatten()
             .collect::<Vec<Point3>>();
-        Grid::from_vec(points, v_div + 1)
+        Grid::from_vec(points, u_div + 1)
+    }
+
+    pub fn get_triangle_mesh(&self) -> TriangleMesh {
+        self.get_points().into()
     }
 }

@@ -1,9 +1,7 @@
 use geom3d::{
-    surface::{BezierSurface, SurfacePatch},
-    Float, Grid, Point3,
+    surface::{BezierSurface, Surface, SurfacePatch},
+    Float, Grid, Model, Point3,
 };
-
-type Model = Vec<SurfacePatch<BezierSurface<Point3>>>;
 
 fn load_teapot(division: (usize, usize)) -> std::io::Result<Model> {
     use std::fs::File;
@@ -22,15 +20,18 @@ fn load_teapot(division: (usize, usize)) -> std::io::Result<Model> {
         let numbers = line?;
         let items = numbers.split_whitespace().collect::<Vec<_>>();
         if items.len() == 1 {
-            model.reserve_exact(usize::from_str(items[0]).unwrap());
+            model
+                .surfaces
+                .reserve_exact(usize::from_str(items[0]).unwrap());
         } else if items.len() == 2 {
             if points.len() > 0 {
                 let surface = SurfacePatch {
-                    surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
+                    surface: Box::new(BezierSurface::new(Grid::from_vec(points, current_cols)))
+                        as Box<dyn Surface>,
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
                     parameter_division: division,
                 };
-                model.push(surface);
+                model.add_surface(surface);
             }
             let m = usize::from_str(items[0]).unwrap();
             let n = usize::from_str(items[1]).unwrap();
@@ -47,20 +48,17 @@ fn load_teapot(division: (usize, usize)) -> std::io::Result<Model> {
     }
     // add last surface
     let surface = SurfacePatch {
-        surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
+        surface: Box::new(BezierSurface::new(Grid::from_vec(points, current_cols)))
+            as Box<dyn Surface>,
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
         parameter_division: division,
     };
-    model.push(surface);
+    model.add_surface(surface);
     Ok(model)
 }
 
-// cargo run --example bezier > teapot.xyz
 fn main() {
-    let teapot = load_teapot((10, 10)).unwrap();
-    for surface in teapot {
-        for point in surface.get_points().iter() {
-            println!("{} {} {}", point.x, point.y, point.z);
-        }
-    }
+    let teapot = load_teapot((16, 16)).unwrap();
+    teapot.save_as_stl("teapot.stl").unwrap();
+    teapot.save_as_obj("teapot.obj").unwrap();
 }
