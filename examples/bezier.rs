@@ -1,9 +1,9 @@
 use geom3d::{
-    surface::{BezierSurface, Surface, SurfacePatch},
+    surface::{BezierSurface, SurfacePatch},
     Float, Grid, Model, Point3,
 };
 
-fn load_teapot(division: (usize, usize)) -> std::io::Result<Model> {
+fn load_teapot(division: (usize, usize)) -> std::io::Result<Model<BezierSurface<Point3>>> {
     use std::fs::File;
     use std::io::{BufRead, BufReader};
     use std::path::Path;
@@ -26,8 +26,7 @@ fn load_teapot(division: (usize, usize)) -> std::io::Result<Model> {
         } else if items.len() == 2 {
             if points.len() > 0 {
                 let surface = SurfacePatch {
-                    surface: Box::new(BezierSurface::new(Grid::from_vec(points, current_cols)))
-                        as Box<dyn Surface>,
+                    surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
                     parameter_division: division,
                 };
@@ -48,8 +47,7 @@ fn load_teapot(division: (usize, usize)) -> std::io::Result<Model> {
     }
     // add last surface
     let surface = SurfacePatch {
-        surface: Box::new(BezierSurface::new(Grid::from_vec(points, current_cols)))
-            as Box<dyn Surface>,
+        surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
         parameter_division: division,
     };
