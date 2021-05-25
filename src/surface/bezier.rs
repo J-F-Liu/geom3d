@@ -31,6 +31,7 @@ impl Surface for BezierSurface<Point3> {
     }
 }
 
+/// Rational bezier surface, point (x,y,z) with weight w is (wx,wy,wz,w)
 impl Surface for BezierSurface<Point4> {
     fn get_point(&self, u: Float, v: Float) -> Point3 {
         let (n, m) = self.control_points.size();

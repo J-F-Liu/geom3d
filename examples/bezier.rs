@@ -4,9 +4,8 @@ use geom3d::{
 };
 
 type Model = Vec<SurfacePatch<BezierSurface<Point3>>>;
-const DIVISIONS: (usize, usize) = (10, 10);
 
-fn load_teapot() -> std::io::Result<Model> {
+fn load_teapot(division: (usize, usize)) -> std::io::Result<Model> {
     use std::fs::File;
     use std::io::{BufRead, BufReader};
     use std::path::Path;
@@ -29,7 +28,7 @@ fn load_teapot() -> std::io::Result<Model> {
                 let surface = SurfacePatch {
                     surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
-                    sample_count: DIVISIONS,
+                    parameter_division: division,
                 };
                 model.push(surface);
             }
@@ -50,7 +49,7 @@ fn load_teapot() -> std::io::Result<Model> {
     let surface = SurfacePatch {
         surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
-        sample_count: (10, 10),
+        parameter_division: division,
     };
     model.push(surface);
     Ok(model)
@@ -58,7 +57,7 @@ fn load_teapot() -> std::io::Result<Model> {
 
 // cargo run --example bezier > teapot.xyz
 fn main() {
-    let teapot = load_teapot().unwrap();
+    let teapot = load_teapot((10, 10)).unwrap();
     for surface in teapot {
         for point in surface.get_points().iter() {
             println!("{} {} {}", point.x, point.y, point.z);

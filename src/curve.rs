@@ -13,13 +13,13 @@ pub trait Curve {
 pub struct CurveSegment<C: Curve> {
     pub curve: C,
     pub parameter_range: (Float, Float),
-    pub sample_count: usize,
+    pub parameter_division: usize,
 }
 
 impl<C: Curve> CurveSegment<C> {
     /// Get sample points on the curve segment
     pub fn get_points(&self) -> Vec<Point3> {
-        let parameters = create_parameters(self.parameter_range, self.sample_count);
+        let parameters = create_parameters(self.parameter_range, self.parameter_division);
         parameters
             .into_iter()
             .map(|u| self.curve.get_point(u))

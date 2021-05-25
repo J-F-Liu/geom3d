@@ -7,6 +7,7 @@ pub struct BezierCurve<P> {
     pub control_points: Vec<P>,
 }
 
+/// 3D bezier curve
 impl Curve for BezierCurve<Point3> {
     fn get_point(&self, u: Float) -> Point3 {
         let mut point = Point3::ZERO;
@@ -18,6 +19,7 @@ impl Curve for BezierCurve<Point3> {
     }
 }
 
+/// Rational bezier curve, point (x,y,z) with weight w is (wx,wy,wz,w)
 impl Curve for BezierCurve<Point4> {
     fn get_point(&self, u: Float) -> Point3 {
         let mut point = Point4::ZERO;
