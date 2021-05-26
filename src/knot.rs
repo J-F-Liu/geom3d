@@ -136,4 +136,8 @@ fn test_bspline_basis() {
         vec![0.125, 0.375, 0.375, 0.125]
     );
     assert_eq!(knots.bspline_basis(3, 1.0), vec![0.0, 0.0, 0.0, 1.0]);
+    assert_eq!(
+        *KnotVector::uniform_knot(2, 2),
+        vec![0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0],
+    );
 }

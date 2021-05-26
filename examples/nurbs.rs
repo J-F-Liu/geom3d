@@ -3,7 +3,10 @@ use geom3d::{
     Float, Grid, Model, Point3,
 };
 
-fn load_teapot(division: (usize, usize)) -> std::io::Result<Model<BSplineSurface<Point3>>> {
+fn load_teapot(
+    degree: (usize, usize),
+    division: (usize, usize),
+) -> std::io::Result<Model<BSplineSurface<Point3>>> {
     use std::fs::File;
     use std::io::{BufRead, BufReader};
     use std::path::Path;
@@ -26,7 +29,7 @@ fn load_teapot(division: (usize, usize)) -> std::io::Result<Model<BSplineSurface
         } else if items.len() == 2 {
             if points.len() > 0 {
                 let surface = SurfacePatch {
-                    surface: BSplineSurface::new(Grid::from_vec(points, current_cols), (3, 3)),
+                    surface: BSplineSurface::new(Grid::from_vec(points, current_cols), degree),
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
                     parameter_division: division,
                 };
@@ -47,7 +50,7 @@ fn load_teapot(division: (usize, usize)) -> std::io::Result<Model<BSplineSurface
     }
     // add last surface
     let surface = SurfacePatch {
-        surface: BSplineSurface::new(Grid::from_vec(points, current_cols), (3, 3)),
+        surface: BSplineSurface::new(Grid::from_vec(points, current_cols), degree),
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
         parameter_division: division,
     };
@@ -56,7 +59,8 @@ fn load_teapot(division: (usize, usize)) -> std::io::Result<Model<BSplineSurface
 }
 
 fn main() {
-    let teapot = load_teapot((16, 16)).unwrap();
+    let teapot = load_teapot((2, 2), (16, 16)).unwrap();
     teapot.save_as_stl("teapot.stl").unwrap();
+    let teapot = load_teapot((1, 3), (16, 16)).unwrap();
     teapot.save_as_obj("teapot.obj").unwrap();
 }

@@ -13,8 +13,8 @@ impl<P: Clone> BSplineSurface<P> {
         let (u_deg, v_deg) = degree;
         assert!(control_points.rows() > v_deg && control_points.cols() > u_deg);
 
-        let u_knots = KnotVector::bezier_knot(u_deg);
-        let v_knots = KnotVector::bezier_knot(v_deg);
+        let u_knots = KnotVector::uniform_knot(u_deg, control_points.cols() - u_deg);
+        let v_knots = KnotVector::uniform_knot(v_deg, control_points.rows() - v_deg);
         Self {
             control_points,
             knots: (u_knots, v_knots),
