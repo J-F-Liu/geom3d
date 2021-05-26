@@ -6,10 +6,12 @@ pub type Point4 = Vec4;
 
 mod basis;
 pub mod curve;
+mod knot;
 mod mesh;
 mod model;
 pub mod surface;
 
 pub use grid::{grid, Grid};
+pub use knot::KnotVector;
 pub use mesh::TriangleMesh;
 pub use model::Model;

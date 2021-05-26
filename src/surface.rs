@@ -3,7 +3,9 @@ use crate::{Float, Point3, TriangleMesh};
 use grid::Grid;
 
 mod bezier;
+mod bspline;
 pub use bezier::*;
+pub use bspline::*;
 
 pub trait Surface {
     /// Get a point on the surface with parameters `(u,v)`

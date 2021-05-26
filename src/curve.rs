@@ -2,7 +2,9 @@ use crate::basis::create_parameters;
 use crate::{Float, Point3};
 
 mod bezier;
+mod bspline;
 pub use bezier::*;
+pub use bspline::*;
 
 pub trait Curve {
     /// Get a point on the curve with parameter `u`
