@@ -1,5 +1,4 @@
-use crate::Point3;
-use grid::Grid;
+use crate::{Grid, Point3};
 
 pub struct TriangleMesh {
     pub vertices: Vec<Point3>,
@@ -23,7 +22,7 @@ impl From<Grid<Point3>> for TriangleMesh {
             }
         }
         TriangleMesh {
-            vertices: grid.flatten().clone(),
+            vertices: grid.into_vec(),
             triangles,
         }
     }

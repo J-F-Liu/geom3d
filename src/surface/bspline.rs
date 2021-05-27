@@ -1,6 +1,5 @@
 use super::Surface;
-use crate::{Float, KnotVector, Point3, Point4};
-use grid::Grid;
+use crate::{Float, Grid, KnotVector, Point3, Point4};
 
 pub struct BSplineSurface<P> {
     pub control_points: Grid<P>,

@@ -1,7 +1,6 @@
 use super::Surface;
 use crate::basis::bernstein;
-use crate::{Float, Point3, Point4};
-use grid::Grid;
+use crate::{Float, Grid, Point3, Point4};
 
 #[derive(Debug)]
 pub struct BezierSurface<P> {

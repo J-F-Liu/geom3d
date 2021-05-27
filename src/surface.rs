@@ -1,6 +1,5 @@
 use crate::basis::create_parameters;
-use crate::{Float, Point3, TriangleMesh};
-use grid::Grid;
+use crate::{Float, Grid, Point3, TriangleMesh};
 
 mod bezier;
 mod bspline;
