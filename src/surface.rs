@@ -46,6 +46,11 @@ impl<S: Surface> SurfacePatch<S> {
         Grid::from_vec(points, u_div + 1)
     }
 
+    pub fn get_triangle_count(&self) -> usize {
+        let (u_div, v_div) = self.parameter_division;
+        u_div * v_div * 2
+    }
+
     pub fn get_triangle_mesh(&self) -> TriangleMesh {
         self.get_points().into()
     }
