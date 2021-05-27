@@ -29,7 +29,10 @@ fn load_teapot(
         } else if items.len() == 2 {
             if points.len() > 0 {
                 let surface = SurfacePatch {
-                    surface: BSplineSurface::new(Grid::from_vec(points, current_cols), degree),
+                    surface: BSplineSurface::uniform_clamped(
+                        Grid::from_vec(points, current_cols),
+                        degree,
+                    ),
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
                     parameter_division: division,
                 };
@@ -50,7 +53,7 @@ fn load_teapot(
     }
     // add last surface
     let surface = SurfacePatch {
-        surface: BSplineSurface::new(Grid::from_vec(points, current_cols), degree),
+        surface: BSplineSurface::uniform_clamped(Grid::from_vec(points, current_cols), degree),
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
         parameter_division: division,
     };

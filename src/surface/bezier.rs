@@ -17,13 +17,13 @@ impl<P: Clone> BezierSurface<P> {
 impl Surface for BezierSurface<Point3> {
     fn get_point(&self, u: Float, v: Float) -> Point3 {
         let (n, m) = self.control_points.size();
-        let basis_u = bernstein(m, u); // m cols
-        let basis_v = bernstein(n, v); // n rows
+        let basis_u = bernstein(n, u); // n rows
+        let basis_v = bernstein(m, v); // m cols
         let mut point = Point3::ZERO;
         for i in 0..n {
             for j in 0..m {
                 let p = self.control_points[i][j];
-                point += basis_u[j] * basis_v[i] * p;
+                point += basis_u[i] * basis_v[j] * p;
             }
         }
         point
@@ -34,13 +34,13 @@ impl Surface for BezierSurface<Point3> {
 impl Surface for BezierSurface<Point4> {
     fn get_point(&self, u: Float, v: Float) -> Point3 {
         let (n, m) = self.control_points.size();
-        let basis_u = bernstein(m, u); // m cols
-        let basis_v = bernstein(n, v); // n rows
+        let basis_u = bernstein(n, u); // n rows
+        let basis_v = bernstein(m, v); // m cols
         let mut point = Point4::ZERO;
         for i in 0..n {
             for j in 0..m {
                 let p = self.control_points[i][j];
-                point += basis_u[j] * basis_v[i] * p;
+                point += basis_u[i] * basis_v[j] * p;
             }
         }
         (1.0 / point.w) * point.truncate()

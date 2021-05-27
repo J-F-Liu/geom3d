@@ -1,6 +1,7 @@
 use super::Surface;
 use crate::{Float, Grid, KnotVector, Point3, Point4};
 
+#[derive(Debug)]
 pub struct BSplineSurface<P> {
     pub control_points: Grid<P>,
     pub knots: (KnotVector, KnotVector),
@@ -8,12 +9,27 @@ pub struct BSplineSurface<P> {
 }
 
 impl<P: Clone> BSplineSurface<P> {
-    pub fn new(control_points: Grid<P>, degree: (usize, usize)) -> Self {
+    pub fn new(
+        control_points: Grid<P>,
+        knots: (KnotVector, KnotVector),
+        degree: (usize, usize),
+    ) -> Self {
         let (u_deg, v_deg) = degree;
-        assert!(control_points.rows() > v_deg && control_points.cols() > u_deg);
+        assert_eq!(control_points.rows() + u_deg + 1, knots.0.len());
+        assert_eq!(control_points.cols() + v_deg + 1, knots.1.len());
+        Self {
+            control_points,
+            knots,
+            degree: (u_deg as u8, v_deg as u8),
+        }
+    }
 
-        let u_knots = KnotVector::uniform_knot(u_deg, control_points.cols() - u_deg);
-        let v_knots = KnotVector::uniform_knot(v_deg, control_points.rows() - v_deg);
+    pub fn uniform_clamped(control_points: Grid<P>, degree: (usize, usize)) -> Self {
+        let (u_deg, v_deg) = degree;
+        assert!(control_points.rows() > u_deg && control_points.cols() > v_deg);
+
+        let u_knots = KnotVector::uniform_knot(u_deg, control_points.rows() - u_deg);
+        let v_knots = KnotVector::uniform_knot(v_deg, control_points.cols() - v_deg);
         Self {
             control_points,
             knots: (u_knots, v_knots),
@@ -34,7 +50,7 @@ impl Surface for BSplineSurface<Point3> {
         for i in 0..n {
             for j in 0..m {
                 let p = self.control_points[i][j];
-                point += basis_u[j] * basis_v[i] * p;
+                point += basis_u[i] * basis_v[j] * p;
             }
         }
         point
@@ -53,7 +69,7 @@ impl Surface for BSplineSurface<Point4> {
         for i in 0..n {
             for j in 0..m {
                 let p = self.control_points[i][j];
-                point += basis_u[j] * basis_v[i] * p;
+                point += basis_u[i] * basis_v[j] * p;
             }
         }
         (1.0 / point.w) * point.truncate()

@@ -8,7 +8,7 @@ mod basis;
 pub mod curve;
 mod knot;
 mod mesh;
-mod model;
+pub mod model;
 pub mod surface;
 
 pub use grid::{grid, Grid};

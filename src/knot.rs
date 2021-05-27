@@ -18,6 +18,26 @@ impl KnotVector {
         KnotVector(knots)
     }
 
+    pub fn from_values_and_multiplicities(
+        values: Vec<Float>,
+        multiplicities: Vec<usize>,
+    ) -> KnotVector {
+        let mut knots = Vec::with_capacity(multiplicities.iter().sum());
+        for (value, multiplicity) in values.into_iter().zip(multiplicities.into_iter()) {
+            knots.extend(std::iter::repeat(value).take(multiplicity));
+        }
+        KnotVector(knots)
+    }
+
+    pub fn normalize(&self) -> KnotVector {
+        let start = self[0];
+        let length = self[self.len() - 1] - self[0];
+        self.iter()
+            .map(|value| (value - start) / length)
+            .collect::<Vec<_>>()
+            .into()
+    }
+
     /// the multiplicity of the `i`th knot
     pub fn multiplicity(&self, i: usize) -> usize {
         self.iter().filter(|u| ulps_eq!(self[i], u)).count()
@@ -93,6 +113,12 @@ impl KnotVector {
         knots.extend((1..division).map(|i| (i as Float) * step));
         knots.extend(std::iter::repeat(1.0).take(degree + 1));
         KnotVector(knots)
+    }
+}
+
+impl From<Vec<Float>> for KnotVector {
+    fn from(vec: Vec<Float>) -> KnotVector {
+        KnotVector(vec)
     }
 }
 

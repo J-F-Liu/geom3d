@@ -80,3 +80,6 @@ impl<S: Surface> Model<S> {
         Ok(())
     }
 }
+
+mod step_reader;
+pub use step_reader::ModelReader as StepReader;
