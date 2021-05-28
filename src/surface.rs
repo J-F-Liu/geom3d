@@ -6,7 +6,7 @@ mod bspline;
 pub use bezier::*;
 pub use bspline::*;
 
-pub trait Surface {
+pub trait Surface: std::fmt::Debug {
     /// Get a point on the surface with parameters `(u,v)`
     fn get_point(&self, u: Float, v: Float) -> Point3;
 }

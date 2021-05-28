@@ -3,6 +3,7 @@ use crate::surface::{Surface, SurfacePatch};
 use crate::{Float, Grid, KnotVector, Point3, Point4};
 use iso_10303::step::{EntityRef, Real, StepReader};
 use iso_10303_parts::ap214::*;
+use std::any::Any;
 
 fn point3(coordinates: &Vec<Real>) -> Point3 {
     Point3::new(
@@ -156,6 +157,56 @@ fn extract_surface(
             parameter_range: ((0.0, 1.0), (0.0, 1.0)),
             parameter_division: (16, 16),
         });
+    }
+    if let Some(surfaces) = reader.get_entity::<Vec<Box<dyn Any>>>(face.face_geometry()) {
+        let mut control_points_list = None;
+        let mut degree = None;
+        let mut u_knots = None;
+        let mut v_knots = None;
+        let mut weighted_control_points = None;
+        for surface in surfaces {
+            if let Some(bspline_surface) = surface.downcast_ref::<BSplineSurface>() {
+                control_points_list = Some(bspline_surface.control_points_list());
+                degree = Some((
+                    bspline_surface.u_degree() as usize,
+                    bspline_surface.v_degree() as usize,
+                ));
+            }
+            if let Some(bspline_surface) = surface.downcast_ref::<BSplineSurfaceWithKnots>() {
+                u_knots = Some(extract_knot_vector(
+                    bspline_surface.u_knots(),
+                    bspline_surface.u_multiplicities(),
+                ));
+                v_knots = Some(extract_knot_vector(
+                    bspline_surface.v_knots(),
+                    bspline_surface.v_multiplicities(),
+                ));
+            }
+            if let Some(bspline_surface) = surface.downcast_ref::<RationalBSplineSurface>() {
+                weighted_control_points = Some(extract_weighted_control_points(
+                    reader,
+                    control_points_list.unwrap(),
+                    bspline_surface.weights_data(),
+                ));
+            }
+        }
+        if let Some(weighted_control_points) = weighted_control_points {
+            if let (Some(u_knots), Some(v_knots)) = (u_knots, v_knots) {
+                let surface = crate::surface::BSplineSurface::new(
+                    Grid::from_vec(
+                        weighted_control_points,
+                        control_points_list.unwrap()[0].len(),
+                    ),
+                    (u_knots, v_knots),
+                    degree.unwrap(),
+                );
+                return Some(SurfacePatch {
+                    surface: Box::new(surface) as Box<dyn Surface>,
+                    parameter_range: ((0.0, 1.0), (0.0, 1.0)),
+                    parameter_division: (16, 16),
+                });
+            }
+        }
     }
     return None;
 }
