@@ -1,11 +1,6 @@
 use crate::basis::create_parameters;
 use crate::{Float, Grid, Point3, TriangleMesh};
 
-mod bezier;
-mod bspline;
-pub use bezier::*;
-pub use bspline::*;
-
 pub trait Surface: std::fmt::Debug {
     /// Get a point on the surface with parameters `(u,v)`
     fn get_point(&self, u: Float, v: Float) -> Point3;
@@ -54,3 +49,13 @@ impl<S: Surface> SurfacePatch<S> {
         self.get_points().into()
     }
 }
+
+
+mod bezier;
+mod bspline;
+mod cylinder;
+mod plane;
+pub use bezier::*;
+pub use bspline::*;
+pub use cylinder::*;
+pub use plane::*;

@@ -1,6 +1,7 @@
 use super::Model;
+use crate::consts::TAU;
 use crate::surface::{Surface, SurfacePatch};
-use crate::{Float, Grid, KnotVector, Point3, Point4};
+use crate::{Float, Grid, KnotVector, Point3, Point4, Vec3};
 use iso_10303::step::{EntityRef, Real, StepReader};
 use iso_10303_parts::ap214::*;
 use std::any::Any;
@@ -21,6 +22,26 @@ fn point4(coordinates: &Vec<Real>, weight: &Real) -> Point4 {
         (coordinates[2].0 as Float) * weight,
         weight,
     )
+}
+
+fn axis2_placement_3d(
+    reader: &Ap214Reader,
+    placement_ref: &EntityRef,
+) -> (Point3, Option<Vec3>, Option<Vec3>) {
+    let placement = reader
+        .get_entity::<Axis2Placement3d>(placement_ref)
+        .unwrap();
+    let location = reader
+        .get_entity::<CartesianPoint>(placement.location())
+        .map(|point| point3(point.coordinates()))
+        .unwrap();
+    let axis = reader
+        .get_entity::<Direction>(placement.axis().as_ref().unwrap())
+        .map(|direction| point3(direction.direction_ratios()));
+    let direction = reader
+        .get_entity::<Direction>(placement.ref_direction().as_ref().unwrap())
+        .map(|direction| point3(direction.direction_ratios()));
+    (location, axis, direction)
 }
 
 fn extract_control_points(
@@ -73,6 +94,33 @@ fn extract_surface(
     reader: &Ap214Reader,
     face: &AdvancedFace,
 ) -> Option<SurfacePatch<Box<dyn Surface>>> {
+    if let Some(plane) = reader.get_entity::<Plane>(face.face_geometry()) {
+        let (origin, u_axis, v_axis) = axis2_placement_3d(reader, plane.position());
+        let surface = crate::surface::Plane {
+            origin,
+            u_axis: u_axis.unwrap(),
+            v_axis: v_axis.unwrap(),
+        };
+        return Some(SurfacePatch {
+            surface: Box::new(surface) as Box<dyn Surface>,
+            parameter_range: ((0.0, 1.0), (0.0, 1.0)),
+            parameter_division: (16, 16),
+        });
+    }
+    if let Some(cylinder) = reader.get_entity::<CylindricalSurface>(face.face_geometry()) {
+        let (origin, axis, ref_dir) = axis2_placement_3d(reader, cylinder.position());
+        let surface = crate::surface::Cylinder {
+            origin,
+            axis: axis.unwrap(),
+            ref_dir: ref_dir.unwrap().normalize(),
+            radius: cylinder.radius().0,
+        };
+        return Some(SurfacePatch {
+            surface: Box::new(surface) as Box<dyn Surface>,
+            parameter_range: ((0.0, 1.0), (0.0, TAU)),
+            parameter_division: (16, 16),
+        });
+    }
     if let Some(bezier_surface) = reader.get_entity::<BezierSurface>(face.face_geometry()) {
         let control_points = extract_control_points(reader, bezier_surface.control_points_list());
         let surface = crate::surface::BezierSurface::new(Grid::from_vec(
