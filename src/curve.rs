@@ -5,11 +5,17 @@ use crate::{Float, Point3};
 pub trait Curve: std::fmt::Debug {
     /// Get a point on the curve with parameter `u`
     fn get_point(&self, u: Float) -> Point3;
+
+    /// Get parameter of nearest point on the curve to the given point
+    fn project(&self, point: Point3) -> Float;
 }
 
 impl Curve for Box<dyn Curve> {
     fn get_point(&self, u: Float) -> Point3 {
         self.as_ref().get_point(u)
+    }
+    fn project(&self, point: Point3) -> Float {
+        self.as_ref().project(point)
     }
 }
 

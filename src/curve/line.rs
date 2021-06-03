@@ -11,4 +11,8 @@ impl Curve for Line {
     fn get_point(&self, u: Float) -> Point3 {
         self.origin + self.direction * u
     }
+
+    fn project(&self, point: Point3) -> Float {
+        (point - self.origin).dot(self.direction)
+    }
 }

@@ -25,6 +25,14 @@ fn vec4(coordinates: &Vec<Real>, weight: &Real) -> Vec4 {
     )
 }
 
+fn vertex_point(reader: &Ap214Reader, vertex_ref: &EntityRef) -> Point3 {
+    reader
+        .get_entity::<VertexPoint>(vertex_ref)
+        .and_then(|vertex| reader.get_entity::<CartesianPoint>(vertex.vertex_geometry()))
+        .map(|point| vec3(point.coordinates()))
+        .unwrap()
+}
+
 fn axis1_placement(reader: &Ap214Reader, placement_ref: &EntityRef) -> (Point3, Option<Vec3>) {
     let placement = reader.get_entity::<Axis1Placement>(placement_ref).unwrap();
     let location = reader
@@ -153,6 +161,28 @@ fn extract_curve(reader: &Ap214Reader, curve_ref: &EntityRef) -> Option<Box<dyn 
     }
     let id = curve_ref.0;
     println!("{}: {} is unrecoginzed", id, reader.get_type_name(id));
+    None
+}
+
+fn extract_edge_curve(
+    reader: &Ap214Reader,
+    edge_ref: &EntityRef,
+) -> Option<CurveSegment<Box<dyn Curve>>> {
+    // The curve is implicitly trimmed by the vertices of the edge, this defines the edge domain. Multiple edges can reference the same curve.
+    // The sense of an edge is from the edge start vertex to the edge end vertex; the sense of a curve is in the direction of increasing parameter.
+    if let Some(edge) = reader.get_entity::<EdgeCurve>(edge_ref) {
+        if let Some(curve) = extract_curve(reader, edge.edge_geometry()) {
+            let start = vertex_point(reader, edge.edge_start());
+            let end = vertex_point(reader, edge.edge_end());
+            let u0 = curve.project(start);
+            let u1 = curve.project(end);
+            return Some(CurveSegment {
+                curve,
+                parameter_range: (u0, u1),
+                parameter_division: 16,
+            });
+        }
+    }
     None
 }
 
@@ -352,6 +382,18 @@ impl ModelReader {
         for advanced_face in reader.get_entities::<AdvancedFace>() {
             if let Some(surface) = extract_surface(&reader, advanced_face) {
                 let mut edges = Vec::new();
+                for bound in advanced_face.bounds() {
+                    if let Some(face_bound) = reader.get_entity::<FaceBound>(bound) {
+                        if let Some(edge_loop) = reader.get_entity::<EdgeLoop>(face_bound.bound()) {
+                            let edge_list = edge_loop.edge_list().iter().filter_map(|edge| {
+                                reader.get_entity::<OrientedEdge>(edge).and_then(|edge| {
+                                    extract_edge_curve(&reader, edge.edge_element())
+                                })
+                            });
+                            edges.extend(edge_list);
+                        }
+                    }
+                }
                 let trimmed_surface = TrimmedSurface { surface, edges };
                 model.add_surface(trimmed_surface);
             } else {

@@ -18,6 +18,10 @@ impl Curve for BSplineCurve<Point3> {
         }
         point
     }
+
+    fn project(&self, point: Point3) -> Float {
+        unimplemented!()
+    }
 }
 
 /// Rational BSpline curve, point (x,y,z) with weight w is (wx,wy,wz,w)
@@ -29,5 +33,9 @@ impl Curve for BSplineCurve<Point4> {
             point += b * p;
         }
         (1.0 / point.w) * point.truncate()
+    }
+
+    fn project(&self, point: Point3) -> Float {
+        unimplemented!()
     }
 }

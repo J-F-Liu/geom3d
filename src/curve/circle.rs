@@ -14,4 +14,17 @@ impl Curve for Circle {
         let rotation = Quat::from_axis_angle(self.axis, angle);
         self.center + rotation * self.ref_dir * self.radius
     }
+
+    fn project(&self, point: Point3) -> Float {
+        let y_axis = self.axis.cross(self.ref_dir).normalize();
+        let direction = point - self.center;
+        let x = direction.dot(self.ref_dir);
+        let y = direction.dot(y_axis);
+        let angle = y.atan2(x);
+        if angle >= 0.0 {
+            angle
+        } else {
+            angle + crate::consts::TAU
+        }
+    }
 }
