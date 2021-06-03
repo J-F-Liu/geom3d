@@ -1,11 +1,6 @@
 use crate::basis::create_parameters;
 use crate::{Float, Point3};
 
-mod bezier;
-mod bspline;
-pub use bezier::*;
-pub use bspline::*;
-
 pub trait Curve: std::fmt::Debug {
     /// Get a point on the curve with parameter `u`
     fn get_point(&self, u: Float) -> Point3;
@@ -34,3 +29,14 @@ impl<C: Curve> CurveSegment<C> {
             .collect()
     }
 }
+
+mod bezier;
+mod bspline;
+mod circle;
+mod line;
+mod polyline;
+pub use bezier::*;
+pub use bspline::*;
+pub use circle::*;
+pub use line::*;
+pub use polyline::*;

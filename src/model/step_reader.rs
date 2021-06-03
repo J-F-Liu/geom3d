@@ -1,27 +1,39 @@
 use super::Model;
 use crate::consts::TAU;
 use crate::surface::{Surface, SurfacePatch};
-use crate::{Float, Grid, KnotVector, Point3, Point4, Vec3};
+use crate::{Float, Grid, KnotVector, Point3, Point4, Vec3, Vec4};
 use iso_10303::step::{EntityRef, Real, StepReader};
 use iso_10303_parts::ap214::*;
 use std::any::Any;
 
-fn point3(coordinates: &Vec<Real>) -> Point3 {
-    Point3::new(
+fn vec3(coordinates: &Vec<Real>) -> Vec3 {
+    Vec3::new(
         coordinates[0].0 as Float,
         coordinates[1].0 as Float,
         coordinates[2].0 as Float,
     )
 }
 
-fn point4(coordinates: &Vec<Real>, weight: &Real) -> Point4 {
+fn vec4(coordinates: &Vec<Real>, weight: &Real) -> Vec4 {
     let weight = weight.0 as Float;
-    Point4::new(
+    Vec4::new(
         (coordinates[0].0 as Float) * weight,
         (coordinates[1].0 as Float) * weight,
         (coordinates[2].0 as Float) * weight,
         weight,
     )
+}
+
+fn axis1_placement(reader: &Ap214Reader, placement_ref: &EntityRef) -> (Point3, Option<Vec3>) {
+    let placement = reader.get_entity::<Axis1Placement>(placement_ref).unwrap();
+    let location = reader
+        .get_entity::<CartesianPoint>(placement.location())
+        .map(|point| vec3(point.coordinates()))
+        .unwrap();
+    let axis = reader
+        .get_entity::<Direction>(placement.axis().as_ref().unwrap())
+        .map(|direction| vec3(direction.direction_ratios()));
+    (location, axis)
 }
 
 fn axis2_placement_3d(
@@ -33,15 +45,27 @@ fn axis2_placement_3d(
         .unwrap();
     let location = reader
         .get_entity::<CartesianPoint>(placement.location())
-        .map(|point| point3(point.coordinates()))
+        .map(|point| vec3(point.coordinates()))
         .unwrap();
     let axis = reader
         .get_entity::<Direction>(placement.axis().as_ref().unwrap())
-        .map(|direction| point3(direction.direction_ratios()));
+        .map(|direction| vec3(direction.direction_ratios()));
     let direction = reader
         .get_entity::<Direction>(placement.ref_direction().as_ref().unwrap())
-        .map(|direction| point3(direction.direction_ratios()));
+        .map(|direction| vec3(direction.direction_ratios()));
     (location, axis, direction)
+}
+
+fn extract_points(reader: &Ap214Reader, points_list: &Vec<EntityRef>) -> Vec<Point3> {
+    points_list
+        .iter()
+        .map(|point| {
+            reader
+                .get_entity::<CartesianPoint>(point)
+                .map(|point| vec3(point.coordinates()))
+                .unwrap()
+        })
+        .collect::<Vec<_>>()
 }
 
 fn extract_control_points(
@@ -54,7 +78,7 @@ fn extract_control_points(
             row.iter().map(|point| {
                 reader
                     .get_entity::<CartesianPoint>(point)
-                    .map(|point| point3(point.coordinates()))
+                    .map(|point| vec3(point.coordinates()))
                     .unwrap()
             })
         })
@@ -74,7 +98,7 @@ fn extract_weighted_control_points(
             points.iter().zip(weights.iter()).map(|(point, weight)| {
                 reader
                     .get_entity::<CartesianPoint>(point)
-                    .map(|point| point4(point.coordinates(), weight))
+                    .map(|point| vec4(point.coordinates(), weight))
                     .unwrap()
             })
         })
@@ -88,6 +112,50 @@ fn extract_knot_vector(knots: &Vec<Real>, multiplicities: &Vec<i64>) -> KnotVect
         multiplicities.iter().map(|&value| value as usize).collect(),
     )
     .normalize()
+}
+
+fn extract_curve(
+    reader: &Ap214Reader,
+    curve_ref: &EntityRef,
+) -> Option<Box<dyn crate::curve::Curve>> {
+    if let Some(line) = reader.get_entity::<Line>(curve_ref) {
+        let origin = reader
+            .get_entity::<CartesianPoint>(line.pnt())
+            .map(|point| vec3(point.coordinates()))
+            .unwrap();
+        let direction = reader
+            .get_entity::<Vector>(line.dir())
+            .and_then(|vector| reader.get_entity::<Direction>(vector.orientation()))
+            .map(|dir| vec3(dir.direction_ratios()))
+            .unwrap();
+        return Some(Box::new(crate::curve::Line { origin, direction }));
+    }
+    if let Some(circle) = reader.get_entity::<Circle>(curve_ref) {
+        let (center, axis, ref_dir) = axis2_placement_3d(reader, circle.position());
+        return Some(Box::new(crate::curve::Circle {
+            center,
+            axis: axis.unwrap(),
+            ref_dir: ref_dir.unwrap().normalize(),
+            radius: circle.radius().0,
+        }));
+    }
+    if let Some(polyline) = reader.get_entity::<Polyline>(curve_ref) {
+        let points = extract_points(reader, polyline.points());
+        return Some(Box::new(crate::curve::Polyline::new(points)));
+    }
+    if let Some(bspline) = reader.get_entity::<BSplineCurveWithKnots>(curve_ref) {
+        let control_points = extract_points(reader, bspline.control_points_list());
+        let knots = extract_knot_vector(bspline.knots(), bspline.knot_multiplicities());
+        // let closed = bspline.closed_curve() == Some(true);
+        return Some(Box::new(crate::curve::BSplineCurve {
+            control_points,
+            knots,
+            degree: bspline.degree() as u8,
+        }));
+    }
+    let id = curve_ref.0;
+    println!("{}: {} is unrecoginzed", id, reader.get_type_name(id));
+    None
 }
 
 fn extract_surface(
@@ -256,6 +324,21 @@ fn extract_surface(
             }
         }
     }
+    if let Some(revolution) = reader.get_entity::<SurfaceOfRevolution>(face.face_geometry()) {
+        if let Some(section) = extract_curve(reader, revolution.swept_curve()) {
+            let (origin, axis) = axis1_placement(reader, revolution.axis_position());
+            let surface = crate::surface::SpinSurface {
+                origin,
+                axis: axis.unwrap(),
+                section,
+            };
+            return Some(SurfacePatch {
+                surface: Box::new(surface) as Box<dyn Surface>,
+                parameter_range: ((0.0, 1.0), (0.0, TAU)),
+                parameter_division: (16, 16),
+            });
+        }
+    }
     return None;
 }
 
@@ -270,10 +353,11 @@ impl ModelReader {
 
         let mut model = Model::new();
         for advanced_face in reader.get_entities::<AdvancedFace>() {
-            // let id = advanced_face.face_geometry().0;
-            // println!("{}: {}", id, reader.get_type_name(id));
             if let Some(surface) = extract_surface(&reader, advanced_face) {
                 model.add_surface(surface);
+            } else {
+                let id = advanced_face.face_geometry().0;
+                println!("{}: {} is unrecoginzed", id, reader.get_type_name(id));
             }
         }
         Ok(model)
