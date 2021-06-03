@@ -6,9 +6,15 @@ mod bspline;
 pub use bezier::*;
 pub use bspline::*;
 
-pub trait Curve {
+pub trait Curve: std::fmt::Debug {
     /// Get a point on the curve with parameter `u`
     fn get_point(&self, u: Float) -> Point3;
+}
+
+impl Curve for Box<dyn Curve> {
+    fn get_point(&self, u: Float) -> Point3 {
+        self.as_ref().get_point(u)
+    }
 }
 
 #[derive(Debug)]
