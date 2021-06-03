@@ -32,3 +32,19 @@ pub fn bernstein(n: usize, u: Float) -> Vec<Float> {
 
     values
 }
+
+#[test]
+fn test_bernstein() {
+    assert_eq!(
+        create_parameters((0.0, 1.0), 8),
+        vec![0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0,]
+    );
+    assert_eq!(
+        create_parameters((1.0, 0.0), 8),
+        vec![1.0, 0.875, 0.75, 0.625, 0.5, 0.375, 0.25, 0.125, 0.0,]
+    );
+    assert_eq!(
+        bernstein(4, 0.25),
+        vec![0.421875, 0.421875, 0.140625, 0.015625,]
+    );
+}

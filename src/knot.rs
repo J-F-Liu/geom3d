@@ -102,8 +102,8 @@ impl KnotVector {
     /// ```
     /// use geom3d::*;
     /// assert_eq!(
-    ///     *KnotVector::uniform_knot(2, 5),
-    ///     vec![0.0, 0.0, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0, 1.0],
+    ///     *KnotVector::uniform_knot(2, 4),
+    ///     vec![0.0, 0.0, 0.0, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0],
     /// );
     /// ```
     pub fn uniform_knot(degree: usize, division: usize) -> KnotVector {
