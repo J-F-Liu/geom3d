@@ -1,6 +1,7 @@
 use super::Model;
 use crate::consts::TAU;
-use crate::surface::{Surface, SurfacePatch};
+use crate::curve::{Curve, CurveSegment};
+use crate::surface::{BoundedSurface, Surface, TrimmedSurface};
 use crate::{Float, Grid, KnotVector, Point3, Point4, Vec3, Vec4};
 use iso_10303::step::{EntityRef, Real, StepReader};
 use iso_10303_parts::ap214::*;
@@ -114,10 +115,7 @@ fn extract_knot_vector(knots: &Vec<Real>, multiplicities: &Vec<i64>) -> KnotVect
     .normalize()
 }
 
-fn extract_curve(
-    reader: &Ap214Reader,
-    curve_ref: &EntityRef,
-) -> Option<Box<dyn crate::curve::Curve>> {
+fn extract_curve(reader: &Ap214Reader, curve_ref: &EntityRef) -> Option<Box<dyn Curve>> {
     if let Some(line) = reader.get_entity::<Line>(curve_ref) {
         let origin = reader
             .get_entity::<CartesianPoint>(line.pnt())
@@ -161,7 +159,7 @@ fn extract_curve(
 fn extract_surface(
     reader: &Ap214Reader,
     face: &AdvancedFace,
-) -> Option<SurfacePatch<Box<dyn Surface>>> {
+) -> Option<BoundedSurface<Box<dyn Surface>>> {
     if let Some(plane) = reader.get_entity::<Plane>(face.face_geometry()) {
         let (origin, u_axis, v_axis) = axis2_placement_3d(reader, plane.position());
         let surface = crate::surface::Plane {
@@ -169,7 +167,7 @@ fn extract_surface(
             u_axis: u_axis.unwrap(),
             v_axis: v_axis.unwrap(),
         };
-        return Some(SurfacePatch {
+        return Some(BoundedSurface {
             surface: Box::new(surface) as Box<dyn Surface>,
             parameter_range: ((0.0, 1.0), (0.0, 1.0)),
             parameter_division: (16, 16),
@@ -183,7 +181,7 @@ fn extract_surface(
             ref_dir: ref_dir.unwrap().normalize(),
             radius: cylinder.radius().0,
         };
-        return Some(SurfacePatch {
+        return Some(BoundedSurface {
             surface: Box::new(surface) as Box<dyn Surface>,
             parameter_range: ((0.0, 1.0), (0.0, TAU)),
             parameter_division: (16, 16),
@@ -195,7 +193,7 @@ fn extract_surface(
             control_points,
             bezier_surface.control_points_list()[0].len(),
         ));
-        return Some(SurfacePatch {
+        return Some(BoundedSurface {
             surface: Box::new(surface) as Box<dyn Surface>,
             parameter_range: ((0.0, 1.0), (0.0, 1.0)),
             parameter_division: (16, 16),
@@ -214,7 +212,7 @@ fn extract_surface(
             ),
             degree,
         );
-        return Some(SurfacePatch {
+        return Some(BoundedSurface {
             surface: Box::new(surface) as Box<dyn Surface>,
             parameter_range: ((0.0, 1.0), (0.0, 1.0)),
             parameter_division: (16, 16),
@@ -238,7 +236,7 @@ fn extract_surface(
             ),
             degree,
         );
-        return Some(SurfacePatch {
+        return Some(BoundedSurface {
             surface: Box::new(surface) as Box<dyn Surface>,
             parameter_range: ((0.0, 1.0), (0.0, 1.0)),
             parameter_division: (16, 16),
@@ -268,7 +266,7 @@ fn extract_surface(
             (u_knots, v_knots),
             degree,
         );
-        return Some(SurfacePatch {
+        return Some(BoundedSurface {
             surface: Box::new(surface) as Box<dyn Surface>,
             parameter_range: ((0.0, 1.0), (0.0, 1.0)),
             parameter_division: (16, 16),
@@ -316,7 +314,7 @@ fn extract_surface(
                     (u_knots, v_knots),
                     degree.unwrap(),
                 );
-                return Some(SurfacePatch {
+                return Some(BoundedSurface {
                     surface: Box::new(surface) as Box<dyn Surface>,
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
                     parameter_division: (16, 16),
@@ -332,7 +330,7 @@ fn extract_surface(
                 axis: axis.unwrap(),
                 section,
             };
-            return Some(SurfacePatch {
+            return Some(BoundedSurface {
                 surface: Box::new(surface) as Box<dyn Surface>,
                 parameter_range: ((0.0, 1.0), (0.0, TAU)),
                 parameter_division: (16, 16),
@@ -343,18 +341,19 @@ fn extract_surface(
 }
 
 pub struct ModelReader {}
+pub type StepModel = Model<TrimmedSurface<BoundedSurface<Box<dyn Surface>>, Box<dyn Curve>>>;
 
 impl ModelReader {
-    pub fn read_model<P: AsRef<std::path::Path>>(
-        file: P,
-    ) -> std::io::Result<Model<Box<dyn Surface>>> {
+    pub fn read_model<P: AsRef<std::path::Path>>(file: P) -> std::io::Result<StepModel> {
         let mut reader = Ap214Reader::new();
         reader.read(file)?;
 
         let mut model = Model::new();
         for advanced_face in reader.get_entities::<AdvancedFace>() {
             if let Some(surface) = extract_surface(&reader, advanced_face) {
-                model.add_surface(surface);
+                let mut edges = Vec::new();
+                let trimmed_surface = TrimmedSurface { surface, edges };
+                model.add_surface(trimmed_surface);
             } else {
                 let id = advanced_face.face_geometry().0;
                 println!("{}: {} is unrecoginzed", id, reader.get_type_name(id));

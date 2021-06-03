@@ -1,6 +1,7 @@
 use crate::basis::create_parameters;
 use crate::{Float, Point3};
 
+/// Parametric curve
 pub trait Curve: std::fmt::Debug {
     /// Get a point on the curve with parameter `u`
     fn get_point(&self, u: Float) -> Point3;

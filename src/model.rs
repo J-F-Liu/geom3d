@@ -1,17 +1,17 @@
-use crate::surface::{Surface, SurfacePatch};
+use crate::surface::SurfacePatch;
 
-pub struct Model<S: Surface> {
-    pub surfaces: Vec<SurfacePatch<S>>,
+pub struct Model<S: SurfacePatch> {
+    pub surfaces: Vec<S>,
 }
 
-impl<S: Surface> Model<S> {
+impl<S: SurfacePatch> Model<S> {
     pub fn new() -> Model<S> {
         Model {
             surfaces: Vec::new(),
         }
     }
 
-    pub fn add_surface(&mut self, surface: SurfacePatch<S>) {
+    pub fn add_surface(&mut self, surface: S) {
         self.surfaces.push(surface);
     }
 
