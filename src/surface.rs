@@ -1,10 +1,15 @@
-use crate::curve::Curve;
-use crate::{utils, Float, Grid, Point3};
+use crate::curve::{Curve, CurveSegment};
+use crate::{utils, Float, Grid, Point3, TriangleMesh};
 
 /// Parametric surface
 pub trait Surface: std::fmt::Debug {
     /// Get a point on the surface with parameters `(u,v)`
     fn get_point(&self, u: Float, v: Float) -> Point3;
+
+    /// Trim the surface with an edge loop
+    fn trim(&self, _edges: &[CurveSegment<Box<dyn Curve>>]) -> TriangleMesh {
+        unimplemented!()
+    }
 }
 
 impl Surface for Box<dyn Surface> {
@@ -43,13 +48,21 @@ impl<S: Surface> SurfacePatch<S> {
     }
 }
 
+pub struct TrimmedSurface<S> {
+    pub surface: S,
+
+    /// The edges should form a closed loop.
+    pub edges: Vec<CurveSegment<Box<dyn Curve>>>,
+    // To be implemented
+    // pub holes: Vec<CurveSegment<C>>,
+}
+
 mod bezier;
 mod bspline;
 mod cylinder;
 mod plane;
 mod spin;
 mod sweep;
-mod trim;
 
 pub use bezier::*;
 pub use bspline::*;
@@ -57,4 +70,3 @@ pub use cylinder::*;
 pub use plane::*;
 pub use spin::*;
 pub use sweep::*;
-pub use trim::*;

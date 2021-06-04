@@ -371,7 +371,7 @@ fn extract_surface(
 }
 
 pub struct ModelReader {}
-pub type StepModel = Model<TrimmedSurface<SurfacePatch<Box<dyn Surface>>, Box<dyn Curve>>>;
+pub type StepModel = Model<TrimmedSurface<Box<dyn Surface>>>;
 
 impl ModelReader {
     pub fn read_model<P: AsRef<std::path::Path>>(file: P) -> std::io::Result<StepModel> {
@@ -394,7 +394,10 @@ impl ModelReader {
                         }
                     }
                 }
-                let trimmed_surface = TrimmedSurface { surface, edges };
+                let trimmed_surface = TrimmedSurface {
+                    surface: surface.surface,
+                    edges,
+                };
                 model.add_face(trimmed_surface);
             } else {
                 let id = advanced_face.face_geometry().0;

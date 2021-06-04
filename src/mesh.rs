@@ -1,9 +1,16 @@
 use crate::{Grid, Point3};
 
+#[derive(Clone)]
 pub struct TriangleMesh {
     pub vertices: Vec<Point3>,
     /// Indices of points forming triangle list
     pub triangles: Vec<u32>,
+}
+
+impl TriangleMesh {
+    pub fn triangle_count(&self) -> usize {
+        self.triangles.len() / 3
+    }
 }
 
 impl From<Grid<Point3>> for TriangleMesh {

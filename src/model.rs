@@ -14,26 +14,24 @@ impl<F: Face> Model<F> {
     }
 
     pub fn save_as_stl<P: AsRef<std::path::Path>>(&self, filename: P) -> std::io::Result<()> {
-        use std::io::Write;
+        use std::io::{Seek, SeekFrom, Write};
         let path = std::path::Path::new(filename.as_ref());
         let name = path.file_stem().unwrap().to_string_lossy();
         let file = std::fs::File::create(path)?;
         let mut writer = std::io::BufWriter::new(file);
 
-        let mut header = Vec::with_capacity(80);
+        let header_size = 80;
+        let mut header = Vec::with_capacity(header_size);
         writeln!(header, "Binary STL file\nName: {:57}", name)?;
-        header.truncate(80);
+        header.truncate(header_size);
         writer.write(&header)?;
 
-        let triangle_count: usize = self
-            .faces
-            .iter()
-            .map(|face| face.get_triangle_count())
-            .sum();
+        let mut triangle_count: usize = 0;
         writer.write(&(triangle_count as u32).to_le_bytes())?;
 
         for face in &self.faces {
             let mesh = face.get_triangle_mesh();
+            triangle_count += mesh.triangle_count();
             for triangle in mesh.triangles.chunks(3) {
                 // normal
                 writer.write(&0.0_f32.to_le_bytes())?;
@@ -50,6 +48,9 @@ impl<F: Face> Model<F> {
                 writer.write(&[0u8, 0u8])?;
             }
         }
+        writer.seek(SeekFrom::Start(header_size as u64))?;
+        dbg!(triangle_count);
+        writer.write(&(triangle_count as u32).to_le_bytes())?;
         Ok(())
     }
 
