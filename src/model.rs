@@ -1,18 +1,16 @@
-use crate::surface::SurfacePatch;
+use crate::Face;
 
-pub struct Model<S: SurfacePatch> {
-    pub surfaces: Vec<S>,
+pub struct Model<F: Face> {
+    pub faces: Vec<F>,
 }
 
-impl<S: SurfacePatch> Model<S> {
-    pub fn new() -> Model<S> {
-        Model {
-            surfaces: Vec::new(),
-        }
+impl<F: Face> Model<F> {
+    pub fn new() -> Model<F> {
+        Model { faces: Vec::new() }
     }
 
-    pub fn add_surface(&mut self, surface: S) {
-        self.surfaces.push(surface);
+    pub fn add_face(&mut self, face: F) {
+        self.faces.push(face);
     }
 
     pub fn save_as_stl<P: AsRef<std::path::Path>>(&self, filename: P) -> std::io::Result<()> {
@@ -28,14 +26,14 @@ impl<S: SurfacePatch> Model<S> {
         writer.write(&header)?;
 
         let triangle_count: usize = self
-            .surfaces
+            .faces
             .iter()
-            .map(|surface| surface.get_triangle_count())
+            .map(|face| face.get_triangle_count())
             .sum();
         writer.write(&(triangle_count as u32).to_le_bytes())?;
 
-        for surface in &self.surfaces {
-            let mesh = surface.get_triangle_mesh();
+        for face in &self.faces {
+            let mesh = face.get_triangle_mesh();
             for triangle in mesh.triangles.chunks(3) {
                 // normal
                 writer.write(&0.0_f32.to_le_bytes())?;
@@ -61,8 +59,8 @@ impl<S: SurfacePatch> Model<S> {
         let mut writer = std::io::LineWriter::new(file);
 
         let mut start = 1;
-        for surface in &self.surfaces {
-            let mesh = surface.get_triangle_mesh();
+        for face in &self.faces {
+            let mesh = face.get_triangle_mesh();
             for point in &mesh.vertices {
                 writeln!(writer, "v {} {} {}", point.x, point.y, point.z)?;
             }

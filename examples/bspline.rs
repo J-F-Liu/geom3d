@@ -1,12 +1,12 @@
 use geom3d::{
-    surface::{BSplineSurface, BoundedSurface},
+    surface::{BSplineSurface, SurfacePatch},
     Float, Grid, Model, Point3,
 };
 
 fn load_teapot(
     degree: (usize, usize),
     division: (usize, usize),
-) -> std::io::Result<Model<BoundedSurface<BSplineSurface<Point3>>>> {
+) -> std::io::Result<Model<SurfacePatch<BSplineSurface<Point3>>>> {
     use std::fs::File;
     use std::io::{BufRead, BufReader};
     use std::path::Path;
@@ -24,11 +24,11 @@ fn load_teapot(
         let items = numbers.split_whitespace().collect::<Vec<_>>();
         if items.len() == 1 {
             model
-                .surfaces
+                .faces
                 .reserve_exact(usize::from_str(items[0]).unwrap());
         } else if items.len() == 2 {
             if points.len() > 0 {
-                let surface = BoundedSurface {
+                let surface = SurfacePatch {
                     surface: BSplineSurface::uniform_clamped(
                         Grid::from_vec(points, current_cols),
                         degree,
@@ -36,7 +36,7 @@ fn load_teapot(
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
                     parameter_division: division,
                 };
-                model.add_surface(surface);
+                model.add_face(surface);
             }
             let m = usize::from_str(items[0]).unwrap();
             let n = usize::from_str(items[1]).unwrap();
@@ -52,12 +52,12 @@ fn load_teapot(
         }
     }
     // add last surface
-    let surface = BoundedSurface {
+    let surface = SurfacePatch {
         surface: BSplineSurface::uniform_clamped(Grid::from_vec(points, current_cols), degree),
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
         parameter_division: division,
     };
-    model.add_surface(surface);
+    model.add_face(surface);
     Ok(model)
 }
 

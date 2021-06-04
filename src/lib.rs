@@ -8,12 +8,14 @@ pub use std::f64::consts;
 
 mod basis;
 pub mod curve;
+mod face;
 mod knot;
 mod mesh;
 pub mod model;
 pub mod surface;
 pub mod utils;
 
+pub use face::Face;
 pub use grid::{grid, Grid};
 pub use knot::KnotVector;
 pub use mesh::TriangleMesh;

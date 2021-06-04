@@ -1,5 +1,5 @@
-use crate::curve::{Curve, CurveSegment};
-use crate::{utils, Float, Grid, Point3, TriangleMesh};
+use crate::curve::Curve;
+use crate::{utils, Float, Grid, Point3};
 
 /// Parametric surface
 pub trait Surface: std::fmt::Debug {
@@ -13,15 +13,9 @@ impl Surface for Box<dyn Surface> {
     }
 }
 
-/// A surface patch is representable by a triangle mesh.
-pub trait SurfacePatch {
-    fn get_triangle_count(&self) -> usize;
-    fn get_triangle_mesh(&self) -> TriangleMesh;
-}
-
 /// A piece of surface with natural boundaries defined by parameter ranges.
 #[derive(Debug)]
-pub struct BoundedSurface<S: Surface> {
+pub struct SurfacePatch<S: Surface> {
     pub surface: S,
     /// (u_range, v_range)
     pub parameter_range: ((Float, Float), (Float, Float)),
@@ -29,7 +23,7 @@ pub struct BoundedSurface<S: Surface> {
     pub parameter_division: (usize, usize),
 }
 
-impl<S: Surface> BoundedSurface<S> {
+impl<S: Surface> SurfacePatch<S> {
     /// Get sample points on the surface patch
     pub fn get_points(&self) -> Grid<Point3> {
         let (u_range, v_range) = self.parameter_range;
@@ -49,45 +43,18 @@ impl<S: Surface> BoundedSurface<S> {
     }
 }
 
-impl<S: Surface> SurfacePatch for BoundedSurface<S> {
-    fn get_triangle_count(&self) -> usize {
-        let (u_div, v_div) = self.parameter_division;
-        u_div * v_div * 2
-    }
-
-    fn get_triangle_mesh(&self) -> TriangleMesh {
-        self.get_points().into()
-    }
-}
-
-pub struct TrimmedSurface<S, C: Curve> {
-    pub surface: S,
-
-    /// The edges should form a closed loop.
-    pub edges: Vec<CurveSegment<C>>,
-    // To be implemented
-    // pub holes: Vec<CurveSegment<C>>,
-}
-
-impl<S: SurfacePatch, C: Curve> SurfacePatch for TrimmedSurface<S, C> {
-    fn get_triangle_count(&self) -> usize {
-        unimplemented!()
-    }
-
-    fn get_triangle_mesh(&self) -> TriangleMesh {
-        unimplemented!()
-    }
-}
-
 mod bezier;
 mod bspline;
 mod cylinder;
 mod plane;
 mod spin;
 mod sweep;
+mod trim;
+
 pub use bezier::*;
 pub use bspline::*;
 pub use cylinder::*;
 pub use plane::*;
 pub use spin::*;
 pub use sweep::*;
+pub use trim::*;
