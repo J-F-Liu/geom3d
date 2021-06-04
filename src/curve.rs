@@ -1,5 +1,4 @@
-use crate::basis::create_parameters;
-use crate::{Float, Point3};
+use crate::{utils, Float, Point3};
 
 /// Parametric curve
 pub trait Curve: std::fmt::Debug {
@@ -29,7 +28,7 @@ pub struct CurveSegment<C: Curve> {
 impl<C: Curve> CurveSegment<C> {
     /// Get sample points on the curve segment
     pub fn get_points(&self) -> Vec<Point3> {
-        let parameters = create_parameters(self.parameter_range, self.parameter_division);
+        let parameters = utils::uniform_divide(self.parameter_range, self.parameter_division);
         parameters
             .into_iter()
             .map(|u| self.curve.get_point(u))

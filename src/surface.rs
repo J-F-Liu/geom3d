@@ -1,6 +1,5 @@
-use crate::basis::create_parameters;
 use crate::curve::{Curve, CurveSegment};
-use crate::{Float, Grid, Point3, TriangleMesh};
+use crate::{utils, Float, Grid, Point3, TriangleMesh};
 
 /// Parametric surface
 pub trait Surface: std::fmt::Debug {
@@ -35,8 +34,8 @@ impl<S: Surface> BoundedSurface<S> {
     pub fn get_points(&self) -> Grid<Point3> {
         let (u_range, v_range) = self.parameter_range;
         let (u_div, v_div) = self.parameter_division;
-        let u_parameters = create_parameters(u_range, u_div);
-        let v_parameters = create_parameters(v_range, v_div);
+        let u_parameters = utils::uniform_divide(u_range, u_div);
+        let v_parameters = utils::uniform_divide(v_range, v_div);
         let points = v_parameters
             .into_iter()
             .map(|v| {

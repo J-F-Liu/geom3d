@@ -12,6 +12,7 @@ mod knot;
 mod mesh;
 pub mod model;
 pub mod surface;
+pub mod utils;
 
 pub use grid::{grid, Grid};
 pub use knot::KnotVector;

@@ -1,5 +1,5 @@
 use super::Curve;
-use crate::{Float, Point3};
+use crate::{utils, Float, Point3};
 
 #[derive(Debug)]
 pub struct Polyline {
@@ -33,18 +33,7 @@ impl Polyline {
 
     /// Get index of nearest vertex
     pub fn nearest_vertex(&self, point: Point3) -> usize {
-        let mut min = Float::MAX;
-        let mut min_index = 0;
-
-        for (index, &vertex) in self.vertices.iter().enumerate() {
-            let distance = (point - vertex).length_squared();
-            if distance < min {
-                min = distance;
-                min_index = index;
-            }
-        }
-
-        min_index
+        utils::find_nearest_point(&self.vertices, point)
     }
 }
 
@@ -69,29 +58,20 @@ impl Curve for Polyline {
     }
 
     fn project(&self, point: Point3) -> Float {
-        let vertex_index = self.nearest_vertex(point);
-        if vertex_index == 0 {
-            0.0
-        } else if vertex_index == self.vertices.len() - 1 {
-            1.0
-        } else {
-            let distance_prev = (point - self.vertices[vertex_index - 1])
-                .cross(self.vertices[vertex_index] - self.vertices[vertex_index - 1])
-                .length()
-                / self.segment_lengths[vertex_index - 1];
-            let distance_next = (point - self.vertices[vertex_index])
-                .cross(self.vertices[vertex_index + 1] - self.vertices[vertex_index])
-                .length()
-                / self.segment_lengths[vertex_index];
-            let min_index = if distance_prev < distance_next {
-                vertex_index - 1
-            } else {
-                vertex_index
-            };
-            let length = self.segment_lengths.iter().take(min_index).sum::<Float>()
-                + (point - self.vertices[min_index])
-                    .dot((self.vertices[min_index + 1] - self.vertices[min_index]).normalize());
-            (length / self.length).clamp(0.0, 1.0)
+        let mut min = Float::MAX;
+        let mut min_index = 0;
+
+        for (index, pair) in self.vertices.windows(2).enumerate() {
+            let distance = utils::distance_to_line_segment(pair[0], pair[1], point);
+            if distance < min {
+                min = distance;
+                min_index = index;
+            }
         }
+
+        let length = self.segment_lengths.iter().take(min_index).sum::<Float>()
+            + (point - self.vertices[min_index])
+                .dot((self.vertices[min_index + 1] - self.vertices[min_index]).normalize());
+        (length / self.length).clamp(0.0, 1.0)
     }
 }

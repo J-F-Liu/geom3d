@@ -1,13 +1,6 @@
+use crate::utils::inv_or_zero;
 use crate::Float;
 use approx::ulps_eq;
-
-fn inv_or_zero(delta: Float) -> Float {
-    if ulps_eq!(delta, 0.0) {
-        0.0
-    } else {
-        1.0 / delta
-    }
-}
 
 /// knot vector
 #[derive(Clone, PartialEq, Debug)]
@@ -41,6 +34,17 @@ impl KnotVector {
     /// the multiplicity of the `i`th knot
     pub fn multiplicity(&self, i: usize) -> usize {
         self.iter().filter(|u| ulps_eq!(self[i], u)).count()
+    }
+
+    /// create knot vector by dropping the first and last knots
+    pub fn shrink(&self) -> KnotVector {
+        KnotVector(self[1..self.len() - 1].to_vec())
+    }
+
+    pub fn spans(&self, degree: usize) -> Vec<Float> {
+        self.windows(degree + 1)
+            .map(|span| span[degree] - span[0])
+            .collect()
     }
 
     /// Returns the span index of which span `u` belongs to.
