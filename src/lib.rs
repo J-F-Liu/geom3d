@@ -15,6 +15,7 @@ pub mod model;
 pub mod surface;
 pub mod utils;
 
+pub use curve::CurveGroup;
 pub use face::Face;
 pub use grid::{grid, Grid};
 pub use knot::KnotVector;

@@ -36,6 +36,10 @@ impl<C: Curve> CurveSegment<C> {
     }
 }
 
+pub struct CurveGroup {
+    pub segments: Vec<CurveSegment<Box<dyn Curve>>>,
+}
+
 mod bezier;
 mod bspline;
 mod circle;

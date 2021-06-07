@@ -1,16 +1,24 @@
-use crate::Face;
+use crate::{CurveGroup, Face};
 
 pub struct Model<F: Face> {
     pub faces: Vec<F>,
+    pub curves: Vec<CurveGroup>,
 }
 
 impl<F: Face> Model<F> {
     pub fn new() -> Model<F> {
-        Model { faces: Vec::new() }
+        Model {
+            faces: Vec::new(),
+            curves: Vec::new(),
+        }
     }
 
     pub fn add_face(&mut self, face: F) {
         self.faces.push(face);
+    }
+
+    pub fn add_curve(&mut self, curve: CurveGroup) {
+        self.curves.push(curve);
     }
 
     pub fn save_as_stl<P: AsRef<std::path::Path>>(&self, filename: P) -> std::io::Result<()> {
@@ -76,6 +84,42 @@ impl<F: Face> Model<F> {
             }
             start += mesh.vertices.len() as u32;
         }
+        Ok(())
+    }
+
+    pub fn save_as_svg<P: AsRef<std::path::Path>>(&self, filename: P) -> std::io::Result<()> {
+        use svg::{
+            node::element::{Group, Path},
+            node::Node,
+            Document,
+        };
+        let (width, height) = (300.0, 300.0);
+        let mut document = Document::new()
+            .set("width", format!("{}mm", width))
+            .set("height", format!("{}mm", height))
+            .set("viewBox", (0, 0, width, height));
+        let mut group = Group::new().set("transform", "matrix(1 0 0 -1 0 300)");
+
+        for curve in &self.curves {
+            let mut data = String::new();
+            for segment in &curve.segments {
+                let points = segment.get_points();
+                for point in points {
+                    if data.len() == 0 {
+                        data.push_str(&format!("M {},{}", point.x, point.y));
+                    } else {
+                        data.push_str(&format!(" L {},{}", point.x, point.y));
+                    }
+                }
+            }
+            let path = Path::new()
+                .set("fill", "none")
+                .set("stroke", "black")
+                .set("d", data);
+            group.append(path);
+        }
+        document.append(group);
+        svg::save(filename, &document)?;
         Ok(())
     }
 }

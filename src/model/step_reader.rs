@@ -1,6 +1,6 @@
 use super::Model;
 use crate::consts::TAU;
-use crate::curve::{Curve, CurveSegment};
+use crate::curve::{Curve, CurveGroup, CurveSegment};
 use crate::surface::{Surface, SurfacePatch, TrimmedSurface};
 use crate::{Float, Grid, KnotVector, Point3, Point4, Vec3, Vec4};
 use iso_10303::step::{EntityRef, Real, StepReader};
@@ -120,7 +120,7 @@ fn extract_knot_vector(knots: &Vec<Real>, multiplicities: &Vec<i64>) -> KnotVect
         knots.iter().map(|value| value.0 as Float).collect(),
         multiplicities.iter().map(|&value| value as usize).collect(),
     )
-    .normalize()
+    // .normalize()
 }
 
 fn extract_curve(reader: &Ap214Reader, curve_ref: &EntityRef) -> Option<Box<dyn Curve>> {
@@ -370,6 +370,38 @@ fn extract_surface(
     return None;
 }
 
+fn get_trimming_parameter_value(measure: &TrimmingSelect) -> Option<f64> {
+    if let TrimmingSelect::ParameterValue(value) = measure {
+        Some(value.0)
+    } else {
+        None
+    }
+}
+
+fn extract_curve_segment(
+    reader: &Ap214Reader,
+    segment_ref: &EntityRef,
+) -> Option<CurveSegment<Box<dyn Curve>>> {
+    if let Some(segment) = reader.get_entity::<CompositeCurveSegment>(segment_ref) {
+        if let Some(trimmed_curve) = reader.get_entity::<TrimmedCurve>(segment.parent_curve()) {
+            if let Some(basis_curve) = extract_curve(reader, trimmed_curve.basis_curve()) {
+                let param1 =
+                    get_trimming_parameter_value(trimmed_curve.trim_1().iter().next().unwrap())
+                        .unwrap();
+                let param2 =
+                    get_trimming_parameter_value(trimmed_curve.trim_2().iter().next().unwrap())
+                        .unwrap();
+                return Some(CurveSegment {
+                    curve: basis_curve,
+                    parameter_range: (param1, param2),
+                    parameter_division: 16,
+                });
+            }
+        }
+    }
+    return None;
+}
+
 pub struct ModelReader {}
 pub type StepModel = Model<TrimmedSurface<Box<dyn Surface>>>;
 
@@ -379,6 +411,14 @@ impl ModelReader {
         reader.read(file)?;
 
         let mut model = Model::new();
+        for composite_curve in reader.get_entities::<CompositeCurve>() {
+            let segments = composite_curve
+                .segments()
+                .iter()
+                .filter_map(|segment| extract_curve_segment(&reader, segment))
+                .collect();
+            model.add_curve(CurveGroup { segments });
+        }
         for advanced_face in reader.get_entities::<AdvancedFace>() {
             if let Some(surface) = extract_surface(&reader, advanced_face) {
                 let mut edges = Vec::new();
