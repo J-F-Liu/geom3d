@@ -8,6 +8,8 @@ fn main() {
         model.save_as_obj(file.with_extension("obj")).unwrap();
     }
     if model.curves.len() > 0 {
-        model.save_as_svg(file.with_extension("svg")).unwrap();
+        model
+            .save_as_svg(file.with_extension("svg"), (350.0, 245.0))
+            .unwrap();
     }
 }

@@ -88,19 +88,25 @@ impl<F: Face> Model<F> {
         Ok(())
     }
 
-    pub fn save_as_svg<P: AsRef<std::path::Path>>(&self, filename: P) -> std::io::Result<()> {
+    pub fn save_as_svg<P: AsRef<std::path::Path>>(
+        &self,
+        filename: P,
+        (width, height): (f64, f64),
+    ) -> std::io::Result<()> {
         use curve::Curve;
         use svg::{
             node::element::{Group, Path},
             node::Node,
             Document,
         };
-        let (width, height) = (300.0, 300.0);
         let mut document = Document::new()
             .set("width", format!("{}mm", width))
             .set("height", format!("{}mm", height))
             .set("viewBox", (0, 0, width, height));
-        let mut group = Group::new().set("transform", "matrix(1 0 0 -1 0 300)");
+        let mut group = Group::new()
+            .set("transform", format!("matrix(1 0 0 -1 0 {:.0})", height))
+            .set("fill", "none")
+            .set("stroke", "black");
 
         for curve in &self.curves {
             let mut data = String::new();
@@ -158,10 +164,7 @@ impl<F: Face> Model<F> {
                     }
                 }
             }
-            let path = Path::new()
-                .set("fill", "none")
-                .set("stroke", "black")
-                .set("d", data);
+            let path = Path::new().set("d", data);
             group.append(path);
         }
         document.append(group);
