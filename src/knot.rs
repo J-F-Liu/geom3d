@@ -4,7 +4,7 @@ use approx::ulps_eq;
 
 /// knot vector
 #[derive(Clone, PartialEq, Debug)]
-pub struct KnotVector(Vec<Float>);
+pub struct KnotVector(pub Vec<Float>);
 
 impl KnotVector {
     pub fn new(knots: Vec<Float>) -> KnotVector {
@@ -117,6 +117,27 @@ impl KnotVector {
         knots.extend((1..division).map(|i| (i as Float) * step));
         knots.extend(std::iter::repeat(1.0).take(degree + 1));
         KnotVector(knots)
+    }
+
+    pub fn add_knot(&mut self, knot: f64) -> usize {
+        match self.iter().rposition(|t| *t <= knot) {
+            Some(index) => {
+                self.0.insert(index + 1, knot);
+                index + 1
+            }
+            None => {
+                self.0.insert(0, knot);
+                0
+            }
+        }
+    }
+
+    #[inline]
+    pub fn sub_vec<I: std::slice::SliceIndex<[f64], Output = [f64]>>(
+        &self,
+        range: I,
+    ) -> KnotVector {
+        KnotVector(Vec::from(&self.0[range]))
     }
 }
 

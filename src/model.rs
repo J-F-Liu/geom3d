@@ -1,4 +1,5 @@
-use crate::{CurveGroup, Face};
+use crate::Point3;
+use crate::{curve, CurveGroup, Face};
 
 pub struct Model<F: Face> {
     pub faces: Vec<F>,
@@ -88,6 +89,7 @@ impl<F: Face> Model<F> {
     }
 
     pub fn save_as_svg<P: AsRef<std::path::Path>>(&self, filename: P) -> std::io::Result<()> {
+        use curve::Curve;
         use svg::{
             node::element::{Group, Path},
             node::Node,
@@ -103,12 +105,56 @@ impl<F: Face> Model<F> {
         for curve in &self.curves {
             let mut data = String::new();
             for segment in &curve.segments {
+                if let Some(line) = segment.curve.downcast_ref::<curve::Line>() {
+                    let (u0, u1) = segment.parameter_range;
+                    let start = line.get_point(u0);
+                    let end = line.get_point(u1);
+                    data.push_str(&format!("M {:.2},{:.2}", start.x, start.y));
+                    data.push_str(&format!(" L {:.2},{:.2}", end.x, end.y));
+                    continue;
+                }
+                if let Some(polyline) = segment.curve.downcast_ref::<curve::Polyline>() {
+                    for (index, point) in polyline.vertices.iter().enumerate() {
+                        if index == 0 {
+                            data.push_str(&format!("M {:.2},{:.2}", point.x, point.y));
+                        } else {
+                            data.push_str(&format!(" L {:.2},{:.2}", point.x, point.y));
+                        }
+                    }
+                    continue;
+                }
+                if let Some(bspline) = segment.curve.downcast_ref::<curve::BSplineCurve<Point3>>() {
+                    if bspline.degree == 3 {
+                        for (index, bezier_curve) in
+                            bspline.to_piecewise_bezier().into_iter().enumerate()
+                        {
+                            let start = bezier_curve.control_points[0];
+                            let cp1 = bezier_curve.control_points[1];
+                            let cp2 = bezier_curve.control_points[2];
+                            let end = bezier_curve.control_points[3];
+                            if index == 0 {
+                                data.push_str(&format!("M {:.2},{:.2}", start.x, start.y));
+                                data.push_str(&format!(
+                                    " C {:.2},{:.2} {:.2},{:.2} {:.2},{:.2}",
+                                    cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y
+                                ));
+                            } else {
+                                data.push_str(&format!(
+                                    " {:.2},{:.2} {:.2},{:.2} {:.2},{:.2}",
+                                    cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y
+                                ));
+                            }
+                        }
+                        continue;
+                    }
+                }
+
                 let points = segment.get_points();
                 for point in points {
                     if data.len() == 0 {
-                        data.push_str(&format!("M {},{}", point.x, point.y));
+                        data.push_str(&format!("M {:.2},{:.2}", point.x, point.y));
                     } else {
-                        data.push_str(&format!(" L {},{}", point.x, point.y));
+                        data.push_str(&format!(" L {:.2},{:.2}", point.x, point.y));
                     }
                 }
             }

@@ -1,13 +1,16 @@
 use crate::{utils, Float, Point3};
+use downcast_rs::{impl_downcast, Downcast};
 
 /// Parametric curve
-pub trait Curve: std::fmt::Debug {
+pub trait Curve: std::fmt::Debug + Downcast {
     /// Get a point on the curve with parameter `u`
     fn get_point(&self, u: Float) -> Point3;
 
     /// Get parameter of nearest point on the curve to the given point
     fn project(&self, point: Point3) -> Float;
 }
+
+impl_downcast!(Curve);
 
 impl Curve for Box<dyn Curve> {
     fn get_point(&self, u: Float) -> Point3 {

@@ -1,7 +1,7 @@
 use super::Curve;
-use crate::{utils, Float, KnotVector, Point3, Point4};
+use crate::{utils, utils::Tolerance, Float, KnotVector, Point3, Point4};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BSplineCurve<P> {
     pub control_points: Vec<P>,
     pub knots: KnotVector,
@@ -31,6 +31,104 @@ impl<P: std::ops::Sub<Output = P> + std::ops::Mul<Float, Output = P> + Copy> BSp
             knots,
             degree: self.degree - 1,
         }
+    }
+}
+
+impl BSplineCurve<Point3> {
+    pub fn add_knot(&mut self, knot: f64) {
+        let p = self.degree();
+        let n = self.control_points.len();
+
+        let index = self.knots.add_knot(knot);
+        if index == 0 {
+            self.control_points.insert(0, Point3::ZERO);
+        } else {
+            let start = if index > p { index - p } else { 0 };
+            let end = if index > n {
+                self.control_points.push(Point3::ZERO);
+                n + 1
+            } else {
+                self.control_points
+                    .insert(index - 1, self.control_points[index - 1].clone());
+                index
+            };
+            for i in (start..end).rev() {
+                let delta = self.knots[i + p + 1] - self.knots[i];
+                let a = (knot - self.knots[i]) * utils::inv_or_zero(delta);
+                self.control_points[i] =
+                    self.control_points[i - 1] * (1.0 - a) + self.control_points[i] * a;
+            }
+        }
+    }
+
+    pub fn split(&mut self, mut t: f64) -> BSplineCurve<Point3> {
+        let p = self.degree();
+        let index = self.knots.span_index(t);
+        let s = if t.near(self.knots[index]) {
+            t = self.knots[index];
+            self.knots.multiplicity(index)
+        } else {
+            0
+        };
+
+        for _ in s..=p {
+            self.add_knot(t);
+        }
+
+        let k = self.knots.span_index(t);
+        let m = self.knots.len();
+        let n = self.control_points.len();
+        let knots0 = self.knots.sub_vec(0..=k);
+        let knots1 = self.knots.sub_vec((k - p)..m);
+        let control_points0 = Vec::from(&self.control_points[0..(k - p)]);
+        let control_points1 = Vec::from(&self.control_points[(k - p)..n]);
+        *self = BSplineCurve {
+            knots: knots0,
+            control_points: control_points0,
+            degree: self.degree,
+        };
+        BSplineCurve {
+            knots: knots1,
+            control_points: control_points1,
+            degree: self.degree,
+        }
+    }
+
+    pub fn clamp(&mut self) {
+        let degree = self.degree();
+
+        let s = self.knots.multiplicity(0);
+        for _ in s..=degree {
+            self.add_knot(self.knots[0]);
+        }
+
+        let n = self.knots.len();
+        let s = self.knots.multiplicity(n - 1);
+        for _ in s..=degree {
+            self.add_knot(self.knots[n - 1]);
+        }
+    }
+
+    pub fn to_piecewise_bezier(&self) -> Vec<super::BezierCurve<Point3>> {
+        let mut bspline = self.clone();
+        bspline.clamp();
+
+        let mut knots = self.knots.0.clone();
+        knots.dedup_by(|a, b| a.near(*b));
+        let n = knots.len();
+
+        let mut result = Vec::with_capacity(n - 1);
+        for i in 2..n {
+            let piece = bspline.split(knots[n - i]);
+            result.push(super::BezierCurve {
+                control_points: piece.control_points,
+            });
+        }
+        result.push(super::BezierCurve {
+            control_points: bspline.control_points,
+        });
+        result.reverse();
+        result
     }
 }
 
