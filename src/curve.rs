@@ -39,7 +39,8 @@ impl<C: Curve> CurveSegment<C> {
     }
 }
 
-pub struct CurveGroup {
+/// A continuous curve made up of a series of segments.
+pub struct Polycurve {
     pub segments: Vec<CurveSegment<Box<dyn Curve>>>,
 }
 

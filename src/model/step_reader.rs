@@ -1,6 +1,6 @@
 use super::Model;
 use crate::consts::TAU;
-use crate::curve::{Curve, CurveGroup, CurveSegment};
+use crate::curve::{Curve, Polycurve, CurveSegment};
 use crate::surface::{Surface, SurfacePatch, TrimmedSurface};
 use crate::{Float, Grid, KnotVector, Point3, Point4, Vec3, Vec4};
 use iso_10303::step::{EntityRef, Real, StepReader};
@@ -417,7 +417,7 @@ impl ModelReader {
                 .iter()
                 .filter_map(|segment| extract_curve_segment(&reader, segment))
                 .collect();
-            model.add_curve(CurveGroup { segments });
+            model.add_curve(Polycurve { segments });
         }
         for advanced_face in reader.get_entities::<AdvancedFace>() {
             if let Some(surface) = extract_surface(&reader, advanced_face) {

@@ -1,9 +1,9 @@
 use crate::Point3;
-use crate::{curve, CurveGroup, Face};
+use crate::{curve, Face, Polycurve};
 
 pub struct Model<F: Face> {
     pub faces: Vec<F>,
-    pub curves: Vec<CurveGroup>,
+    pub curves: Vec<Polycurve>,
 }
 
 impl<F: Face> Model<F> {
@@ -18,7 +18,7 @@ impl<F: Face> Model<F> {
         self.faces.push(face);
     }
 
-    pub fn add_curve(&mut self, curve: CurveGroup) {
+    pub fn add_curve(&mut self, curve: Polycurve) {
         self.curves.push(curve);
     }
 
