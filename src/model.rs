@@ -106,7 +106,8 @@ impl<F: Face> Model<F> {
         let mut group = Group::new()
             .set("transform", format!("matrix(1 0 0 -1 0 {:.0})", height))
             .set("fill", "none")
-            .set("stroke", "black");
+            .set("stroke", "black")
+            .set("stroke-linecap", "round");
 
         for curve in &self.curves {
             let mut data = String::new();
