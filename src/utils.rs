@@ -57,6 +57,10 @@ pub fn uniform_divide(range: (Float, Float), division: usize) -> Vec<Float> {
     parameters
 }
 
+pub fn range_at((start, end): (Float, Float), ratio: Float) -> Float {
+    start + (end - start) * ratio
+}
+
 pub fn find_nearest_point(points: &[Point3], point: Point3) -> usize {
     let mut min = Float::MAX;
     let mut min_index = 0;

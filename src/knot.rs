@@ -139,6 +139,11 @@ impl KnotVector {
     ) -> KnotVector {
         KnotVector(Vec::from(&self.0[range]))
     }
+
+    /// Get min and max values
+    pub fn range(&self) -> (Float, Float) {
+        (self[0], self[self.len() - 1])
+    }
 }
 
 impl From<Vec<Float>> for KnotVector {

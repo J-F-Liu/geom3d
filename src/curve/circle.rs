@@ -28,3 +28,21 @@ impl Curve for Circle {
         }
     }
 }
+
+#[test]
+fn test_circle() {
+    let circle = Circle {
+        center: Point3::new(212.25, -60.17616798, 5.25),
+        radius: 52.52114465,
+        axis: Vec3::new(0.0, 1.0, 0.0),
+        ref_dir: Vec3::new(0.898686585, 0.0, 0.438591408),
+    };
+    let a = circle.project(Point3::new(259.450048095, -60.176167979, 28.285322751));
+    let b = circle.project(Point3::new(263.834197783, -60.176168023, 15.126293507));
+    let segment = crate::curve::CurveSegment {
+        curve: circle,
+        parameter_range: (a, b),
+        parameter_division: 16,
+    };
+    dbg!(segment.get_points());
+}

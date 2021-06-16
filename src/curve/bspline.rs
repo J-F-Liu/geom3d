@@ -145,11 +145,12 @@ impl Curve for BSplineCurve<Point3> {
 
     fn project(&self, point: Point3) -> Float {
         if self.degree() == 1 {
-            return crate::curve::Polyline::new(self.control_points.clone()).project(point);
+            let ratio = crate::curve::Polyline::new(self.control_points.clone()).project(point);
+            return utils::range_at(self.knots.range(), ratio);
         }
         let der1 = self.derivative();
         let der2 = der1.derivative();
-        let parameters = utils::uniform_divide((0.0, 1.0), self.control_points.len() * 4);
+        let parameters = utils::uniform_divide(self.knots.range(), self.control_points.len() * 4);
         utils::find_nearest_parameter(self, &der1, &der2, point, &parameters, 10)
     }
 }
@@ -168,4 +169,28 @@ impl Curve for BSplineCurve<Point4> {
     fn project(&self, _point: Point3) -> Float {
         unimplemented!()
     }
+}
+
+#[test]
+fn test_bspline_curve() {
+    let bspline = BSplineCurve {
+        control_points: vec![
+            Point3::new(17.14110848, -28.75946383, 55.24049254),
+            Point3::new(17.71764285, -29.48891243, 54.73687694),
+        ],
+        knots: KnotVector::from_values_and_multiplicities(
+            vec![2.802464183, 3.859874137],
+            vec![2, 2],
+        ),
+        degree: 1,
+    };
+    let a = bspline.project(Point3::new(17.71764285, -29.48891243, 54.73687694));
+    let b = bspline.project(Point3::new(17.14110848, -28.75946383, 55.24049254));
+    dbg!(a, b);
+    let segment = crate::curve::CurveSegment {
+        curve: bspline,
+        parameter_range: (a, b),
+        parameter_division: 16,
+    };
+    dbg!(segment.get_points());
 }
