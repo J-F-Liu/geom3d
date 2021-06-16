@@ -27,6 +27,18 @@ impl Curve for Circle {
             angle + crate::consts::TAU
         }
     }
+
+    // The sense of a curve is in the direction of increasing parameter
+    fn refine_parameter_range(&self, range: (Float, Float), same_sense: bool) -> (Float, Float) {
+        let (a0, a1) = range;
+        if same_sense && a0 > a1 {
+            return (a0, a1 + crate::consts::TAU);
+        }
+        if !same_sense && a0 < a1 {
+            return (a0 + crate::consts::TAU, a1);
+        }
+        (a0, a1)
+    }
 }
 
 #[test]

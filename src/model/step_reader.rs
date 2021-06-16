@@ -1,6 +1,6 @@
 use super::Model;
 use crate::consts::TAU;
-use crate::curve::{Curve, Polycurve, CurveSegment};
+use crate::curve::{Curve, CurveSegment, Polycurve};
 use crate::surface::{Surface, SurfacePatch, TrimmedSurface};
 use crate::{Float, Grid, KnotVector, Point3, Point4, Vec3, Vec4};
 use iso_10303::step::{EntityRef, Real, StepReader};
@@ -176,9 +176,10 @@ fn extract_edge_curve(
             let end = vertex_point(reader, edge.edge_end());
             let u0 = curve.project(start);
             let u1 = curve.project(end);
+            let parameter_range = curve.refine_parameter_range((u0, u1), edge.same_sense());
             return Some(CurveSegment {
                 curve,
-                parameter_range: (u0, u1),
+                parameter_range,
                 parameter_division: 16,
             });
         }
@@ -391,9 +392,11 @@ fn extract_curve_segment(
                 let param2 =
                     get_trimming_parameter_value(trimmed_curve.trim_2().iter().next().unwrap())
                         .unwrap();
+                let parameter_range = basis_curve
+                    .refine_parameter_range((param1, param2), trimmed_curve.sense_agreement());
                 return Some(CurveSegment {
                     curve: basis_curve,
-                    parameter_range: (param1, param2),
+                    parameter_range,
                     parameter_division: 16,
                 });
             }

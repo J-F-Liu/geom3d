@@ -8,6 +8,11 @@ pub trait Curve: std::fmt::Debug + Downcast {
 
     /// Get parameter of nearest point on the curve to the given point
     fn project(&self, point: Point3) -> Float;
+
+    /// Refine parameter range according to whether same sense or not
+    fn refine_parameter_range(&self, range: (Float, Float), _same_sense: bool) -> (Float, Float) {
+        range
+    }
 }
 
 impl_downcast!(Curve);
@@ -18,6 +23,9 @@ impl Curve for Box<dyn Curve> {
     }
     fn project(&self, point: Point3) -> Float {
         self.as_ref().project(point)
+    }
+    fn refine_parameter_range(&self, range: (Float, Float), same_sense: bool) -> (Float, Float) {
+        self.as_ref().refine_parameter_range(range, same_sense)
     }
 }
 
