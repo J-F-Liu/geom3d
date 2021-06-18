@@ -30,8 +30,30 @@ impl Surface for Plane {
         }
 
         let points: Vec<Point2> = vertices.iter().map(|v| self.project(*v)).collect();
+        let (vertex_indices, concave_points) = utils::compute_vertex_convexity(&points);
 
-        let triangles = utils::trianglate_polygon(&points);
+        if vertex_indices.len() == concave_points.len() {
+            // clockwise polygon
+            // dbg!(concave_points.len());
+            return TriangleMesh::new();
+        }
+
+        let triangles = if concave_points.is_empty() {
+            // convex polygon
+            let n = vertices.len();
+            let center = vertices.iter().sum::<Point3>() / (n as Float);
+            vertices.push(center);
+            let mut triangles = Vec::with_capacity((n - 2) * 3);
+            for i in 0..n - 1 {
+                triangles.push(n as u32);
+                triangles.push(i as u32);
+                triangles.push(i as u32 + 1);
+            }
+            triangles
+        } else {
+            // polygon has both convex and concave vertices
+            utils::trianglate_polygon(&points, vertex_indices, concave_points)
+        };
 
         TriangleMesh {
             vertices,
