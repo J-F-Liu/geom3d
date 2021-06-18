@@ -56,13 +56,13 @@ fn axis2_placement_3d(
         .get_entity::<CartesianPoint>(placement.location())
         .map(|point| vec3(point.coordinates()))
         .unwrap();
-    let axis = reader
+    let z_axis = reader
         .get_entity::<Direction>(placement.axis().as_ref().unwrap())
         .map(|direction| vec3(direction.direction_ratios()));
-    let direction = reader
+    let x_axis = reader
         .get_entity::<Direction>(placement.ref_direction().as_ref().unwrap())
         .map(|direction| vec3(direction.direction_ratios()));
-    (location, axis, direction)
+    (location, z_axis, x_axis)
 }
 
 fn extract_points(reader: &Ap214Reader, points_list: &Vec<EntityRef>) -> Vec<Point3> {
@@ -192,11 +192,14 @@ fn extract_surface(
     face: &AdvancedFace,
 ) -> Option<SurfacePatch<Box<dyn Surface>>> {
     if let Some(plane) = reader.get_entity::<Plane>(face.face_geometry()) {
-        let (origin, u_axis, v_axis) = axis2_placement_3d(reader, plane.position());
+        let (origin, z_axis, x_axis) = axis2_placement_3d(reader, plane.position());
+        let normal = z_axis.unwrap();
+        let u_axis = x_axis.unwrap();
         let surface = crate::surface::Plane {
             origin,
-            u_axis: u_axis.unwrap(),
-            v_axis: v_axis.unwrap(),
+            normal,
+            u_axis,
+            v_axis: normal.cross(u_axis),
         };
         return Some(SurfacePatch {
             surface: Box::new(surface) as Box<dyn Surface>,

@@ -4,6 +4,7 @@ use crate::{Float, Point3, Vec3};
 #[derive(Debug)]
 pub struct Plane {
     pub origin: Point3,
+    pub normal: Vec3,
     pub u_axis: Vec3,
     pub v_axis: Vec3,
 }
