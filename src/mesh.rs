@@ -8,6 +8,13 @@ pub struct TriangleMesh {
 }
 
 impl TriangleMesh {
+    pub fn new() -> TriangleMesh {
+        TriangleMesh {
+            vertices: Vec::new(),
+            triangles: Vec::new(),
+        }
+    }
+
     pub fn triangle_count(&self) -> usize {
         self.triangles.len() / 3
     }

@@ -1,6 +1,8 @@
 pub type Float = f64;
+pub type Vec2 = glam::DVec2;
 pub type Vec3 = glam::DVec3;
 pub type Vec4 = glam::DVec4;
+pub type Point2 = Vec2;
 pub type Point3 = Vec3;
 pub type Point4 = Vec4;
 pub type Quat = glam::DQuat;

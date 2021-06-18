@@ -1,7 +1,8 @@
 use super::Surface;
-use crate::{Float, Grid, KnotVector, Point3, Point4};
+use crate::curve::{Curve, CurveSegment};
+use crate::{Float, Grid, KnotVector, Point3, Point4, TriangleMesh};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BSplineSurface<P> {
     pub control_points: Grid<P>,
     pub knots: (KnotVector, KnotVector),
@@ -54,6 +55,16 @@ impl Surface for BSplineSurface<Point3> {
             }
         }
         point
+    }
+
+    fn trim(&self, _edges: &[CurveSegment<Box<dyn Curve>>]) -> TriangleMesh {
+        let patch = crate::surface::SurfacePatch {
+            surface: self.clone(),
+            parameter_range: (self.knots.0.range(), self.knots.1.range()),
+            parameter_division: (16, 16),
+        };
+
+        patch.get_points().into()
     }
 }
 

@@ -191,9 +191,15 @@ fn extract_surface(
     reader: &Ap214Reader,
     face: &AdvancedFace,
 ) -> Option<SurfacePatch<Box<dyn Surface>>> {
+    // whether the sense of the surface normal agrees with the sense of the topological normal to the face
+    let same_sense = face.same_sense();
     if let Some(plane) = reader.get_entity::<Plane>(face.face_geometry()) {
         let (origin, z_axis, x_axis) = axis2_placement_3d(reader, plane.position());
-        let normal = z_axis.unwrap();
+        let normal = if same_sense {
+            z_axis.unwrap()
+        } else {
+            -z_axis.unwrap()
+        };
         let u_axis = x_axis.unwrap();
         let surface = crate::surface::Plane {
             origin,

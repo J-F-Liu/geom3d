@@ -8,13 +8,17 @@ pub trait Surface: std::fmt::Debug {
 
     /// Trim the surface with an edge loop
     fn trim(&self, _edges: &[CurveSegment<Box<dyn Curve>>]) -> TriangleMesh {
-        unimplemented!()
+        TriangleMesh::new()
     }
 }
 
 impl Surface for Box<dyn Surface> {
     fn get_point(&self, u: Float, v: Float) -> Point3 {
         self.as_ref().get_point(u, v)
+    }
+
+    fn trim(&self, edges: &[CurveSegment<Box<dyn Curve>>]) -> TriangleMesh {
+        self.as_ref().trim(edges)
     }
 }
 
