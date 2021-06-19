@@ -43,12 +43,15 @@ impl Surface for Plane {
             let n = vertices.len();
             let center = vertices.iter().sum::<Point3>() / (n as Float);
             vertices.push(center);
-            let mut triangles = Vec::with_capacity((n - 2) * 3);
+            let mut triangles = Vec::with_capacity(n * 3);
             for i in 0..n - 1 {
                 triangles.push(n as u32);
                 triangles.push(i as u32);
                 triangles.push(i as u32 + 1);
             }
+            triangles.push(n as u32);
+            triangles.push(n as u32 - 1);
+            triangles.push(0);
             triangles
         } else {
             // polygon has both convex and concave vertices

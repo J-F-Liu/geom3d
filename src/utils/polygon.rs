@@ -17,7 +17,7 @@ pub fn compute_vertex_convexity(points: &[Point2]) -> (VecDeque<usize>, Vec<usiz
                 vertices.push_back(i);
                 concave_points.push(i);
             }
-            _ => {} // skip colinear or duplicate point
+            Convexity::Colinear => {} // skip colinear or duplicate point
         }
     }
 
@@ -30,9 +30,9 @@ pub fn trianglate_polygon(
     mut vertices: VecDeque<usize>,
     mut concave_points: Vec<usize>,
 ) -> Vec<u32> {
-    let n = points.len();
+    let n = vertices.len();
     let mut triangles = Vec::with_capacity((n - 2) * 3);
-    let mut prev_m = n + 1;
+    let mut prev_m = usize::MAX;
 
     loop {
         if vertices.len() >= prev_m {
@@ -52,7 +52,7 @@ pub fn trianglate_polygon(
         let mut i = 0;
         while i < m {
             let curr = vertices[i];
-            if !concave_points.contains(&curr) {
+            if concave_points.binary_search(&curr).is_err() {
                 let prev = vertices[(m + i - 1).rem_euclid(m)];
                 let next = vertices[(i + 1).rem_euclid(m)];
                 if is_ear(points, &concave_points, prev, curr, next) {
