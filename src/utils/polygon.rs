@@ -1,6 +1,7 @@
 use crate::utils::Tolerance;
-use crate::Point2;
+use crate::{Float, Point2};
 use std::collections::VecDeque;
+use std::iter::FromIterator;
 
 pub fn compute_vertex_convexity(points: &[Point2]) -> (VecDeque<usize>, Vec<usize>) {
     let n = points.len();
@@ -22,6 +23,34 @@ pub fn compute_vertex_convexity(points: &[Point2]) -> (VecDeque<usize>, Vec<usiz
     }
 
     (vertices, concave_points)
+}
+
+pub fn find_concave_vertices(points: &[Point2], vertices: &mut VecDeque<usize>) -> Vec<usize> {
+    let n = vertices.len();
+    let mut to_delete = vec![];
+    let mut concave_points = Vec::new();
+    for i in 0..n {
+        match compute_convexity(
+            points[vertices[(n + i - 1).rem_euclid(n)]],
+            points[vertices[i]],
+            points[vertices[(i + 1).rem_euclid(n)]],
+        ) {
+            Convexity::Convex => {}
+            Convexity::Concave => {
+                concave_points.push(vertices[i]);
+            }
+            Convexity::Colinear => {
+                // remove colinear or duplicate point
+                to_delete.push(i);
+            }
+        }
+    }
+    to_delete.reverse();
+    for j in to_delete {
+        vertices.remove(j);
+    }
+    concave_points.sort();
+    concave_points
 }
 
 /// Triangulation by Ear Clipping
@@ -143,4 +172,87 @@ fn is_ear(
         }
     }
     return true;
+}
+
+pub fn merge_polygons(points: &[Point2], polygons: &[usize]) -> VecDeque<usize> {
+    // find points with maximum x
+    let mut sorted_polygons = Vec::with_capacity(polygons.len());
+    for pair in polygons.windows(2) {
+        if let [start, end] = pair {
+            let mut x_max = Float::MIN;
+            let mut i_max = 0;
+            for index in *start..*end {
+                let point = points[index];
+                if point.x > x_max {
+                    x_max = point.x;
+                    i_max = index;
+                }
+            }
+            sorted_polygons.push((*start, *end, i_max, x_max));
+        }
+    }
+    sorted_polygons.sort_by(|a, b| a.3.partial_cmp(&b.3).unwrap());
+
+    // recursively merge inner polygons to outer polygon
+    let (outer_start, outer_end, _, _) = sorted_polygons.pop().unwrap();
+    let mut vertices = VecDeque::from_iter(outer_start..outer_end);
+    for (start, end, i_max, _) in sorted_polygons.into_iter().rev() {
+        merge_two_polygons(points, &mut vertices, start..end, i_max);
+    }
+    vertices
+}
+
+fn merge_two_polygons(
+    points: &[Point2],
+    outer: &mut VecDeque<usize>,
+    inner: std::ops::Range<usize>,
+    max_x_index: usize,
+) {
+    let inner_point = points[max_x_index];
+    // find nearest edge to inner point
+    let mut min = Float::MAX;
+    let mut min_index = 0;
+    for i in 0..outer.len() {
+        let distance = distance_to_line_segment(
+            points[outer[i]],
+            points[outer[(i + 1).rem_euclid(outer.len())]],
+            inner_point,
+        );
+        if distance < min {
+            min = distance;
+            min_index = i;
+        }
+    }
+    // insert inner polygon at min_index
+    let insert_at = min_index + 1;
+    outer.insert(insert_at, outer[min_index]);
+    for index in (inner.start..=max_x_index).rev() {
+        outer.insert(insert_at, index);
+    }
+    for index in (max_x_index..inner.end).rev() {
+        outer.insert(insert_at, index);
+    }
+}
+
+pub fn distance_to_line_segment(a: Point2, b: Point2, p: Point2) -> Float {
+    let ap = p - a;
+    let ab = b - a;
+    let product = ap.dot(ab);
+    if product <= 0.0 {
+        return ap.length();
+    }
+    if product >= ab.length_squared() {
+        let bp = p - b;
+        return bp.length();
+    }
+    return ap.perp_dot(ab).abs() / ab.length();
+}
+
+#[test]
+fn test_compute_convexity() {
+    let a = Point2::new(7.46852, 258.22396);
+    let b = Point2::new(7.51861, 258.22151);
+    let c = Point2::new(7.56870, 258.21901);
+    dbg!((b - a).perp_dot(c - b));
+    dbg!(compute_convexity(a, b, c));
 }

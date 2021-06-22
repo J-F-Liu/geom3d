@@ -433,22 +433,26 @@ impl ModelReader {
         }
         for advanced_face in reader.get_entities::<AdvancedFace>() {
             if let Some(surface) = extract_surface(&reader, advanced_face) {
-                let mut edges = Vec::new();
+                let mut bounds = Vec::with_capacity(advanced_face.bounds().len());
                 for bound in advanced_face.bounds() {
                     if let Some(face_bound) = reader.get_entity::<FaceBound>(bound) {
                         if let Some(edge_loop) = reader.get_entity::<EdgeLoop>(face_bound.bound()) {
-                            let edge_list = edge_loop.edge_list().iter().filter_map(|edge| {
-                                reader.get_entity::<OrientedEdge>(edge).and_then(|edge| {
-                                    extract_edge_curve(&reader, edge.edge_element())
+                            let edges = edge_loop
+                                .edge_list()
+                                .iter()
+                                .filter_map(|edge| {
+                                    reader.get_entity::<OrientedEdge>(edge).and_then(|edge| {
+                                        extract_edge_curve(&reader, edge.edge_element())
+                                    })
                                 })
-                            });
-                            edges.extend(edge_list);
+                                .collect::<Vec<_>>();
+                            bounds.push(crate::surface::EdgeLoop { edges });
                         }
                     }
                 }
                 let trimmed_surface = TrimmedSurface {
                     surface: surface.surface,
-                    edges,
+                    bounds,
                 };
                 model.add_face(trimmed_surface);
             } else {

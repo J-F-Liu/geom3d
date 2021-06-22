@@ -1,5 +1,4 @@
-use super::Surface;
-use crate::curve::{Curve, CurveSegment};
+use crate::surface::{EdgeLoop, Surface};
 use crate::{Float, Grid, KnotVector, Point3, Point4, TriangleMesh};
 
 #[derive(Debug, Clone)]
@@ -57,7 +56,7 @@ impl Surface for BSplineSurface<Point3> {
         point
     }
 
-    fn trim(&self, _edges: &[CurveSegment<Box<dyn Curve>>]) -> TriangleMesh {
+    fn trim(&self, _bounds: &[EdgeLoop]) -> TriangleMesh {
         let patch = crate::surface::SurfacePatch {
             surface: self.clone(),
             parameter_range: (self.knots.0.range(), self.knots.1.range()),

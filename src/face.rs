@@ -20,6 +20,6 @@ impl<S: Surface> Face for SurfacePatch<S> {
 
 impl<S: Surface> Face for TrimmedSurface<S> {
     fn get_triangle_mesh(&self) -> TriangleMesh {
-        self.surface.trim(&self.edges)
+        self.surface.trim(&self.bounds)
     }
 }

@@ -7,7 +7,7 @@ pub trait Surface: std::fmt::Debug {
     fn get_point(&self, u: Float, v: Float) -> Point3;
 
     /// Trim the surface with an edge loop
-    fn trim(&self, _edges: &[CurveSegment<Box<dyn Curve>>]) -> TriangleMesh {
+    fn trim(&self, _bounds: &[EdgeLoop]) -> TriangleMesh {
         TriangleMesh::new()
     }
 }
@@ -17,8 +17,8 @@ impl Surface for Box<dyn Surface> {
         self.as_ref().get_point(u, v)
     }
 
-    fn trim(&self, edges: &[CurveSegment<Box<dyn Curve>>]) -> TriangleMesh {
-        self.as_ref().trim(edges)
+    fn trim(&self, bounds: &[EdgeLoop]) -> TriangleMesh {
+        self.as_ref().trim(bounds)
     }
 }
 
@@ -52,13 +52,26 @@ impl<S: Surface> SurfacePatch<S> {
     }
 }
 
+pub struct EdgeLoop {
+    /// The edges should form a closed loop.
+    pub edges: Vec<CurveSegment<Box<dyn Curve>>>,
+}
+
+impl EdgeLoop {
+    pub fn generate_polygon(&self) -> Vec<Point3> {
+        let mut vertices = Vec::new();
+        for edge in &self.edges {
+            vertices.extend(edge.get_points());
+        }
+        vertices
+    }
+}
+
 pub struct TrimmedSurface<S> {
     pub surface: S,
 
-    /// The edges should form a closed loop.
-    pub edges: Vec<CurveSegment<Box<dyn Curve>>>,
-    // To be implemented
-    // pub holes: Vec<CurveSegment<C>>,
+    /// One counter-clockwise edge loop is the outer bound, other clockwise loops are inner holes.
+    pub bounds: Vec<EdgeLoop>,
 }
 
 mod bezier;
