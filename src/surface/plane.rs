@@ -29,7 +29,7 @@ impl Surface for Plane {
         let mut vertices = bounds
             .iter()
             .map(|bound| {
-                let polygon = bound.generate_polygon();
+                let polygon = bound.to_polygon();
                 end += polygon.len();
                 polygons.push(end);
                 polygon
@@ -72,6 +72,7 @@ impl Surface for Plane {
                 triangles,
             }
         } else {
+            // triangulate polygon with holes
             let mut vertex_indices = utils::merge_polygons(&points, &polygons);
             let concave_points = utils::find_concave_vertices(&points, &mut vertex_indices);
             let triangles = utils::trianglate_polygon(&points, vertex_indices, concave_points);

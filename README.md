@@ -15,6 +15,7 @@ Features:
 ### References
 
 - 1997,The NURBS Book,Les Piegl,Wayne Tiller
+- 2002,Triangulation by Ear Clipping,David Eberly
 
 ### Similar projects
 

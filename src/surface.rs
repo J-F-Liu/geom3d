@@ -1,5 +1,5 @@
 use crate::curve::{Curve, CurveSegment};
-use crate::{utils, Float, Grid, Point3, TriangleMesh};
+use crate::{utils, utils::Tolerance, Float, Grid, Point3, TriangleMesh};
 
 /// Parametric surface
 pub trait Surface: std::fmt::Debug {
@@ -58,10 +58,17 @@ pub struct EdgeLoop {
 }
 
 impl EdgeLoop {
-    pub fn generate_polygon(&self) -> Vec<Point3> {
+    /// Approximate the edge loop with a polygon
+    pub fn to_polygon(&self) -> Vec<Point3> {
         let mut vertices = Vec::new();
         for edge in &self.edges {
             vertices.extend(edge.get_points());
+        }
+        if vertices[0]
+            .distance_squared(vertices[vertices.len() - 1])
+            .near(0.0)
+        {
+            vertices.pop();
         }
         vertices
     }

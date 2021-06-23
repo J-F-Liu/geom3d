@@ -1,7 +1,6 @@
 use crate::utils::Tolerance;
 use crate::{Float, Point2};
 use std::collections::VecDeque;
-use std::iter::FromIterator;
 
 pub fn compute_vertex_convexity(points: &[Point2]) -> (VecDeque<usize>, Vec<usize>) {
     let n = points.len();
@@ -195,7 +194,8 @@ pub fn merge_polygons(points: &[Point2], polygons: &[usize]) -> VecDeque<usize> 
 
     // recursively merge inner polygons to outer polygon
     let (outer_start, outer_end, _, _) = sorted_polygons.pop().unwrap();
-    let mut vertices = VecDeque::from_iter(outer_start..outer_end);
+    let mut vertices = VecDeque::with_capacity(points.len() + polygons.len() - 1);
+    vertices.extend(outer_start..outer_end);
     for (start, end, i_max, _) in sorted_polygons.into_iter().rev() {
         merge_two_polygons(points, &mut vertices, start..end, i_max);
     }
