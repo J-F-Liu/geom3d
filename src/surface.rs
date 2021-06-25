@@ -1,8 +1,9 @@
 use crate::curve::{Curve, CurveSegment};
 use crate::{utils, utils::Tolerance, Float, Grid, Point3, TriangleMesh};
+use downcast_rs::{impl_downcast, Downcast};
 
 /// Parametric surface
-pub trait Surface: std::fmt::Debug {
+pub trait Surface: std::fmt::Debug + Downcast {
     /// Get a point on the surface with parameters `(u,v)`
     fn get_point(&self, u: Float, v: Float) -> Point3;
 
@@ -11,6 +12,8 @@ pub trait Surface: std::fmt::Debug {
         TriangleMesh::new()
     }
 }
+
+impl_downcast!(Surface);
 
 impl Surface for Box<dyn Surface> {
     fn get_point(&self, u: Float, v: Float) -> Point3 {
