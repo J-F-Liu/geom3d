@@ -67,6 +67,7 @@ impl EdgeLoop {
         for edge in &self.edges {
             vertices.extend(edge.get_points());
         }
+        vertices.dedup_by(|a, b| a.distance_squared(*b).near(0.0));
         if vertices[0]
             .distance_squared(vertices[vertices.len() - 1])
             .near(0.0)

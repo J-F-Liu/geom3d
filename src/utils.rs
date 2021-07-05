@@ -125,5 +125,9 @@ pub fn find_nearest_parameter(
     u
 }
 
+mod meshgen;
+mod point;
 mod polygon;
+pub use meshgen::*;
+pub use point::*;
 pub use polygon::*;
