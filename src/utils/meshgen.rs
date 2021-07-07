@@ -107,7 +107,6 @@ fn find_intersection_with_front(
             }
             return None;
         })
-        .filter(|(_, factor)| *factor > 0.0)
         .collect::<Vec<_>>();
 
     nearby_nodes.sort_by(|a, b| match a.0.cmp(&b.0) {
@@ -121,9 +120,13 @@ fn find_intersection_with_front(
     nearby_nodes.pop().map(|(node, _)| node)
 }
 
+const MIN_GRID_SIZE: Float = 0.001;
 fn point_on_normal_bisector(a: Point2, b: Point2, ratio: Float) -> Point2 {
     let center = (a + b) / 2.0;
-    let displace = (b - a).perp();
+    let mut displace = (b - a).perp();
+    if displace.length() < MIN_GRID_SIZE {
+        displace = displace.normalize() * 0.01;
+    }
     center + displace * ratio
 }
 
@@ -167,12 +170,22 @@ fn test_segments_intersect() {
 #[test]
 fn test_gen_mesh() {
     let points = vec![
+        Point2::new(0.0, 0.2),
+        Point2::new(-0.5, 0.0),
         Point2::new(0.0, 0.0),
         Point2::new(1.0, 0.0),
         Point2::new(2.0, 0.0),
         Point2::new(2.0, 1.0),
         Point2::new(1.0, 1.0),
         Point2::new(0.0, 1.0),
+        Point2::new(-0.5, 1.0),
+        Point2::new(0.0, 0.8),
     ];
-    dbg!(generate_triangular_mesh(&points, &[0, points.len()]));
+    let (points, triangles) = generate_triangular_mesh(&points, &[0, points.len()]);
+    crate::TriangleMesh {
+        vertices: points.iter().map(|p| p.extend(0.0)).collect(),
+        triangles,
+    }
+    .save_as_obj("test.obj")
+    .unwrap();
 }

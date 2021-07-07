@@ -125,6 +125,21 @@ pub fn find_nearest_parameter(
     u
 }
 
+pub fn get_min_max_by_key<T, F: Fn(&T) -> Float>(items: &Vec<T>, key: F) -> (Float, Float) {
+    let mut max_value = Float::MIN;
+    let mut min_value = Float::MAX;
+    for item in items {
+        let value = key(item);
+        if value > max_value {
+            max_value = value;
+        }
+        if value < min_value {
+            min_value = value;
+        }
+    }
+    (min_value, max_value)
+}
+
 mod meshgen;
 mod point;
 mod polygon;

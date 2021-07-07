@@ -30,8 +30,10 @@ impl Surface for Plane {
             .iter()
             .map(|bound| {
                 let polygon = bound.to_polygon();
-                end += polygon.len();
-                polygons.push(end);
+                if polygon.len() > 0 {
+                    end += polygon.len();
+                    polygons.push(end);
+                }
                 polygon
             })
             .flatten()
@@ -39,6 +41,7 @@ impl Surface for Plane {
         let points: Vec<Point2> = vertices.iter().map(|v| self.project(*v)).collect();
 
         if bounds.len() == 1 {
+        if polygons.len() == 2 {
             let (vertex_indices, concave_points) = utils::compute_vertex_convexity(&points);
 
             if vertex_indices.len() == concave_points.len() {
@@ -71,7 +74,7 @@ impl Surface for Plane {
                 vertices,
                 triangles,
             }
-        } else {
+        } else if polygons.len() > 2 {
             // triangulate polygon with holes
             let mut vertex_indices = utils::merge_polygons(&points, &polygons);
             let concave_points = utils::find_concave_vertices(&points, &mut vertex_indices);
@@ -81,6 +84,8 @@ impl Surface for Plane {
                 vertices,
                 triangles,
             }
+        } else {
+            TriangleMesh::new()
         }
     }
 }

@@ -1,6 +1,16 @@
-use crate::utils::Tolerance;
+use crate::utils::{Point, Tolerance};
 use crate::{Float, Point2};
 use std::collections::VecDeque;
+
+// https://www.element84.com/blog/determining-the-winding-of-a-polygon-given-as-a-set-of-ordered-points
+pub fn is_polygon_counter_clockwise(points: &[Point2]) -> bool {
+    let mut sum = 0.0;
+    for i in 0..(points.len() - 1) {
+        sum += (points[i + 1].x - points[i].x) * (points[i].y + points[i + 1].y);
+    }
+    sum += (points[0].x - points[points.len() - 1].x) * (points[points.len() - 1].y + points[0].y);
+    sum < 0.0
+}
 
 pub fn compute_vertex_convexity(points: &[Point2]) -> (VecDeque<usize>, Vec<usize>) {
     let n = points.len();
@@ -213,10 +223,9 @@ fn merge_two_polygons(
     let mut min = Float::MAX;
     let mut min_index = 0;
     for i in 0..outer.len() {
-        let distance = distance_to_line_segment(
+        let distance = inner_point.distance_to_line_segment(
             points[outer[i]],
             points[outer[(i + 1).rem_euclid(outer.len())]],
-            inner_point,
         );
         if distance < min {
             min = distance;
@@ -232,20 +241,6 @@ fn merge_two_polygons(
     for index in (max_x_index..inner.end).rev() {
         outer.insert(insert_at, index);
     }
-}
-
-pub fn distance_to_line_segment(a: Point2, b: Point2, p: Point2) -> Float {
-    let ap = p - a;
-    let ab = b - a;
-    let product = ap.dot(ab);
-    if product <= 0.0 {
-        return ap.length();
-    }
-    if product >= ab.length_squared() {
-        let bp = p - b;
-        return bp.length();
-    }
-    return ap.perp_dot(ab).abs() / ab.length();
 }
 
 #[test]

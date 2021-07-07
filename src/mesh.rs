@@ -18,6 +18,19 @@ impl TriangleMesh {
     pub fn triangle_count(&self) -> usize {
         self.triangles.len() / 3
     }
+
+    pub fn reverse_winding_direction(self) -> TriangleMesh {
+        let triangles = self
+            .triangles
+            .chunks(3)
+            .map(|t| [t[2], t[1], t[0]])
+            .flatten()
+            .collect::<Vec<_>>();
+        TriangleMesh {
+            vertices: self.vertices,
+            triangles: triangles,
+        }
+    }
 }
 
 impl From<Grid<Point3>> for TriangleMesh {

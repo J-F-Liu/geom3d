@@ -1,3 +1,4 @@
+use crate::utils::Tolerance;
 use crate::{Float, Point2};
 
 pub trait Point {
@@ -24,8 +25,21 @@ impl Point for Point2 {
         let pa = a - *self;
         let pb = b - *self;
         let pc = c - *self;
-        pa.perp_dot(pb) >= 0.0 && pb.perp_dot(pc) >= 0.0 && pc.perp_dot(pa) >= 0.0
+        let pab = pa.perp_dot(pb);
+        let pbc = pb.perp_dot(pc);
+        let pca = pc.perp_dot(pa);
+        (pab >= 0.0 || pab.near(0.0))
+            && (pbc >= 0.0 || pbc.near(0.0))
+            && (pca >= 0.0 || pca.near(0.0))
     }
+}
+
+#[test]
+fn test_distance_to_line_segment() {
+    let a = Point2::new(-19.06804, 200.03492);
+    let b = Point2::new(-17.58058, 199.41942);
+    let c = Point2::new(-17.09570, 196.54255);
+    dbg!(c.distance_to_line_segment(a, b));
 }
 
 #[test]
