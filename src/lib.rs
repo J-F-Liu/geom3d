@@ -6,6 +6,7 @@ pub type Point2 = Vec2;
 pub type Point3 = Vec3;
 pub type Point4 = Vec4;
 pub type Quat = glam::DQuat;
+pub type Mat2 = glam::DMat2;
 
 mod basis;
 pub mod curve;

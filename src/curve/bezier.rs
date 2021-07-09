@@ -43,8 +43,7 @@ impl Curve for BezierCurve<Point3> {
         }
         let der1 = self.derivative();
         let der2 = der1.derivative();
-        let parameters = utils::uniform_divide((0.0, 1.0), self.degree() * 4);
-        utils::find_nearest_parameter(self, &der1, &der2, point, &parameters, 10)
+        utils::find_nearest_parameter(self, &der1, &der2, point, (0.0, 1.0), self.degree() * 4, 10)
     }
 }
 

@@ -8,6 +8,7 @@ pub struct KnotVector(pub Vec<Float>);
 
 impl KnotVector {
     pub fn new(knots: Vec<Float>) -> KnotVector {
+        assert!(knots.len() > 1);
         KnotVector(knots)
     }
 

@@ -150,8 +150,15 @@ impl Curve for BSplineCurve<Point3> {
         }
         let der1 = self.derivative();
         let der2 = der1.derivative();
-        let parameters = utils::uniform_divide(self.knots.range(), self.control_points.len() * 4);
-        utils::find_nearest_parameter(self, &der1, &der2, point, &parameters, 10)
+        utils::find_nearest_parameter(
+            self,
+            &der1,
+            &der2,
+            point,
+            self.knots.range(),
+            self.control_points.len() * 4,
+            10,
+        )
     }
 }
 

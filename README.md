@@ -17,6 +17,7 @@ Features:
 - 1997,The NURBS Book,Les Piegl,Wayne Tiller
 - 2002,Triangulation by Ear Clipping,David Eberly
 - 2013,Dynamic grid for mesh generation by the advancing front method,S.H. Lo
+- 1998,Delaunay Triangulation and Meshing: Application to Finite Elements,PL George,H Borouchaki
 
 ### Similar projects
 

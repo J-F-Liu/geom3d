@@ -1,4 +1,4 @@
-use crate::{Float, Point3};
+use crate::{Float, Grid, Point3};
 use approx::{ulps_eq, AbsDiffEq};
 
 /// general tolerance
@@ -27,6 +27,14 @@ pub fn inv_or_zero(delta: Float) -> Float {
         0.0
     } else {
         1.0 / delta
+    }
+}
+
+pub fn clamp_in_range(value: Float, range: (Float, Float)) -> Float {
+    if range.0 < range.1 {
+        value.clamp(range.0, range.1)
+    } else {
+        value.clamp(range.1, range.0)
     }
 }
 
@@ -76,6 +84,22 @@ pub fn find_nearest_point(points: &[Point3], point: Point3) -> usize {
     min_index
 }
 
+pub fn find_nearest_point_in_grid(grid: &Grid<Point3>, point: Point3) -> (usize, usize) {
+    let mut min = Float::MAX;
+    let mut min_index = (0, 0);
+    let (rows, cols) = grid.size();
+    for i in 0..rows {
+        for j in 0..cols {
+            let distance = (point - grid[i][j]).length_squared();
+            if distance < min {
+                min = distance;
+                min_index = (i, j);
+            }
+        }
+    }
+    min_index
+}
+
 pub fn distance_to_line_segment(a: Point3, b: Point3, p: Point3) -> Float {
     let ap = p - a;
     let ab = b - a;
@@ -97,10 +121,12 @@ pub fn find_nearest_parameter(
     der1: &impl Curve,
     der2: &impl Curve,
     point: Point3,
-    parameters: &[Float],
+    range: (Float, Float),
+    division: usize,
     trials: usize,
 ) -> Float {
     // compute initial approximate value
+    let parameters = uniform_divide(range, division);
     let mut u = parameters[find_nearest_point(
         &parameters
             .iter()
@@ -120,7 +146,7 @@ pub fn find_nearest_parameter(
             return u;
         }
         let fprime = der2.get_point(u).dot(delta) + tangent.length_squared();
-        u -= f / fprime;
+        u = clamp_in_range(u - f / fprime, range);
     }
     u
 }
