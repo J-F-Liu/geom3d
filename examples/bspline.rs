@@ -30,7 +30,7 @@ fn load_teapot(
             if points.len() > 0 {
                 let surface = SurfacePatch {
                     surface: BSplineSurface::uniform_clamped(
-                        Grid::from_vec(points, current_cols),
+                        Grid::from_vec(points, current_cols).transpose(),
                         degree,
                     ),
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
@@ -41,7 +41,7 @@ fn load_teapot(
             let m = usize::from_str(items[0]).unwrap();
             let n = usize::from_str(items[1]).unwrap();
             points = Vec::with_capacity((m + 1) * (n + 1));
-            current_cols = n + 1;
+            current_cols = m + 1;
         } else if items.len() == 3 {
             let point = Point3::new(
                 Float::from_str(items[0]).unwrap(),
@@ -53,7 +53,10 @@ fn load_teapot(
     }
     // add last surface
     let surface = SurfacePatch {
-        surface: BSplineSurface::uniform_clamped(Grid::from_vec(points, current_cols), degree),
+        surface: BSplineSurface::uniform_clamped(
+            Grid::from_vec(points, current_cols).transpose(),
+            degree,
+        ),
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
         parameter_division: division,
     };
@@ -64,6 +67,6 @@ fn load_teapot(
 fn main() {
     let teapot = load_teapot((2, 2), (16, 16)).unwrap();
     teapot.save_as_stl("teapot.stl").unwrap();
-    let teapot = load_teapot((3, 1), (16, 16)).unwrap();
+    let teapot = load_teapot((1, 3), (16, 16)).unwrap();
     teapot.save_as_obj("teapot.obj").unwrap();
 }

@@ -3,6 +3,7 @@ use geom3d::{
     Float, Grid, Model, Point3,
 };
 
+// [BPT: Bézier Patch File Format](http://www.holmes3d.net/graphics/roffview/tools/patchoff/)
 fn load_teapot(
     division: (usize, usize),
 ) -> std::io::Result<Model<SurfacePatch<BezierSurface<Point3>>>> {
@@ -28,7 +29,7 @@ fn load_teapot(
         } else if items.len() == 2 {
             if points.len() > 0 {
                 let surface = SurfacePatch {
-                    surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
+                    surface: BezierSurface::new(Grid::from_vec(points, current_cols).transpose()),
                     parameter_range: ((0.0, 1.0), (0.0, 1.0)),
                     parameter_division: division,
                 };
@@ -37,7 +38,7 @@ fn load_teapot(
             let m = usize::from_str(items[0]).unwrap();
             let n = usize::from_str(items[1]).unwrap();
             points = Vec::with_capacity((m + 1) * (n + 1));
-            current_cols = n + 1;
+            current_cols = m + 1;
         } else if items.len() == 3 {
             let point = Point3::new(
                 Float::from_str(items[0]).unwrap(),
@@ -49,7 +50,7 @@ fn load_teapot(
     }
     // add last surface
     let surface = SurfacePatch {
-        surface: BezierSurface::new(Grid::from_vec(points, current_cols)),
+        surface: BezierSurface::new(Grid::from_vec(points, current_cols).transpose()),
         parameter_range: ((0.0, 1.0), (0.0, 1.0)),
         parameter_division: division,
     };

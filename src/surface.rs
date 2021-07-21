@@ -42,16 +42,16 @@ impl<S: Surface> SurfacePatch<S> {
         let (u_div, v_div) = self.parameter_division;
         let u_parameters = utils::uniform_divide(u_range, u_div);
         let v_parameters = utils::uniform_divide(v_range, v_div);
-        let points = v_parameters
+        let points = u_parameters
             .into_iter()
-            .map(|v| {
-                u_parameters
+            .map(|u| {
+                v_parameters
                     .iter()
-                    .map(move |&u| self.surface.get_point(u, v))
+                    .map(move |&v| self.surface.get_point(u, v))
             })
             .flatten()
             .collect::<Vec<Point3>>();
-        Grid::from_vec(points, u_div + 1)
+        Grid::from_vec(points, v_div + 1)
     }
 }
 
