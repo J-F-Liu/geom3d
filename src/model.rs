@@ -64,26 +64,16 @@ impl<F: Face> Model<F> {
     }
 
     pub fn save_as_obj<P: AsRef<std::path::Path>>(&self, filename: P) -> std::io::Result<()> {
-        use std::io::Write;
         let file = std::fs::File::create(filename)?;
         let mut writer = std::io::LineWriter::new(file);
 
-        let mut start = 1;
+        let mut vertex_start = 1;
+        let mut normal_start = 1;
         for face in &self.faces {
             let mesh = face.get_triangle_mesh();
-            for point in &mesh.vertices {
-                writeln!(writer, "v {} {} {}", point.x, point.y, point.z)?;
-            }
-            for triangle in mesh.triangles.chunks(3) {
-                writeln!(
-                    writer,
-                    "f {} {} {}",
-                    start + triangle[0],
-                    start + triangle[1],
-                    start + triangle[2]
-                )?;
-            }
-            start += mesh.vertices.len() as u32;
+            mesh.write_obj(&mut writer, vertex_start, normal_start)?;
+            vertex_start += mesh.vertices.len() as u32;
+            normal_start += mesh.normals.len() as u32;
         }
         Ok(())
     }

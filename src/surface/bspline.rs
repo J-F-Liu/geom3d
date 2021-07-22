@@ -1,7 +1,7 @@
 use crate::surface::{EdgeLoop, Surface};
 use crate::{
-    utils, utils::Tolerance, Float, Grid, KnotVector, Mat2, Point2, Point3, Point4, TriangleMesh,
-    Vec2,
+    face::Face, utils, utils::Tolerance, Float, Grid, KnotVector, Mat2, Point2, Point3, Point4,
+    TriangleMesh, Vec2, Vec3,
 };
 
 #[derive(Debug, Clone)]
@@ -184,6 +184,21 @@ impl Surface for BSplineSurface<Point3> {
         point
     }
 
+    fn get_normals(&self, params: &[Point2]) -> Vec<Vec3> {
+        let der_u = self.derivative_u();
+        let der_v = self.derivative_v();
+
+        params
+            .iter()
+            .map(|p| {
+                der_u
+                    .get_point(p.x, p.y)
+                    .cross(der_v.get_point(p.x, p.y))
+                    .normalize()
+            })
+            .collect()
+    }
+
     fn trim(&self, bounds: &[EdgeLoop]) -> TriangleMesh {
         // let patch = crate::surface::SurfacePatch {
         //     surface: self.clone(),
@@ -223,6 +238,7 @@ impl Surface for BSplineSurface<Point3> {
                 return TriangleMesh {
                     vertices,
                     triangles,
+                    normals: Vec::new(),
                 }
                 .reverse_winding_direction();
             } else {
@@ -238,6 +254,7 @@ impl Surface for BSplineSurface<Point3> {
                 return TriangleMesh {
                     vertices,
                     triangles,
+                    normals: Vec::new(),
                 };
             }
         } else if polygons.len() > 2 {
@@ -252,6 +269,7 @@ impl Surface for BSplineSurface<Point3> {
             return TriangleMesh {
                 vertices,
                 triangles,
+                normals: Vec::new(),
             };
         } else {
             return TriangleMesh::new();

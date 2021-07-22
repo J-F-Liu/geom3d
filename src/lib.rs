@@ -12,7 +12,7 @@ mod basis;
 pub mod curve;
 mod face;
 mod knot;
-mod mesh;
+pub mod mesh;
 pub mod model;
 pub mod surface;
 pub mod utils;

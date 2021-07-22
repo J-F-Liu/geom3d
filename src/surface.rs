@@ -1,11 +1,15 @@
 use crate::curve::{Curve, CurveSegment};
-use crate::{utils, utils::Tolerance, Float, Grid, Point3, TriangleMesh};
+use crate::{utils::Tolerance, Float, Point2, Point3, TriangleMesh, Vec3};
 use downcast_rs::{impl_downcast, Downcast};
 
 /// Parametric surface
 pub trait Surface: std::fmt::Debug + Downcast {
     /// Get a point on the surface with parameters `(u,v)`
     fn get_point(&self, u: Float, v: Float) -> Point3;
+
+    fn get_normals(&self, _params: &[Point2]) -> Vec<Vec3> {
+        Vec::new()
+    }
 
     /// Trim the surface with an edge loop
     fn trim(&self, _bounds: &[EdgeLoop]) -> TriangleMesh {
@@ -37,21 +41,11 @@ pub struct SurfacePatch<S: Surface> {
 
 impl<S: Surface> SurfacePatch<S> {
     /// Get sample points on the surface patch
-    pub fn get_points(&self) -> Grid<Point3> {
-        let (u_range, v_range) = self.parameter_range;
-        let (u_div, v_div) = self.parameter_division;
-        let u_parameters = utils::uniform_divide(u_range, u_div);
-        let v_parameters = utils::uniform_divide(v_range, v_div);
-        let points = u_parameters
-            .into_iter()
-            .map(|u| {
-                v_parameters
-                    .iter()
-                    .map(move |&v| self.surface.get_point(u, v))
-            })
-            .flatten()
-            .collect::<Vec<Point3>>();
-        Grid::from_vec(points, v_div + 1)
+    pub fn get_points(&self, params: &[Point2]) -> Vec<Point3> {
+        params
+            .iter()
+            .map(|p| self.surface.get_point(p.x, p.y))
+            .collect::<Vec<Point3>>()
     }
 }
 

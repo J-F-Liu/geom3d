@@ -89,6 +89,7 @@ impl Surface for Cylinder {
                 return TriangleMesh {
                     vertices,
                     triangles,
+                    normals: Vec::new(),
                 }
                 .reverse_winding_direction();
             } else {
@@ -104,6 +105,7 @@ impl Surface for Cylinder {
                 return TriangleMesh {
                     vertices,
                     triangles,
+                    normals: Vec::new(),
                 };
             }
         } else if polygons.len() > 2 {
@@ -117,6 +119,7 @@ impl Surface for Cylinder {
             return TriangleMesh {
                 vertices,
                 triangles,
+                normals: Vec::new(),
             };
         } else {
             return TriangleMesh::new();

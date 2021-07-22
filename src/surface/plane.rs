@@ -72,6 +72,7 @@ impl Surface for Plane {
             TriangleMesh {
                 vertices,
                 triangles,
+                normals: Vec::new(),
             }
         } else if polygons.len() > 2 {
             // triangulate polygon with holes
@@ -82,6 +83,7 @@ impl Surface for Plane {
             TriangleMesh {
                 vertices,
                 triangles,
+                normals: Vec::new(),
             }
         } else {
             TriangleMesh::new()
