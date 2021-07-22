@@ -40,7 +40,6 @@ impl Surface for Plane {
             .collect::<Vec<_>>();
         let points: Vec<Point2> = vertices.iter().map(|v| self.project(*v)).collect();
 
-        if bounds.len() == 1 {
         if polygons.len() == 2 {
             let (vertex_indices, concave_points) = utils::compute_vertex_convexity(&points);
 
