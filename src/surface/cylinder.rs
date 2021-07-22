@@ -144,8 +144,9 @@ fn test_cylinder_projection() {
     let mesh = cylinder.get_triangle_mesh();
     mesh.save_as_obj("mesh.obj").unwrap();
 
-    let grid = cylinder.get_points();
-    // look from outside, extract boundary points in ccw order
+    let grid = cylinder.get_point_grid();
+    // look from inside, extract boundary points in ccw order
+    // so that projected points are in ccw order
     let mut vertices = Vec::<Point3>::new();
     vertices.extend(grid.iter_row(0).rev());
     vertices.extend(grid.iter_col(0));
@@ -155,17 +156,16 @@ fn test_cylinder_projection() {
     vertices.pop();
 
     let d = 20.0;
-    let mut points = vertices
+    let points = vertices
         .iter()
         .map(|&v| cylinder.surface.project_to_ring(v, d))
         .collect::<Vec<_>>();
-    // the projected points are in cw order, so reverse them
-    points.reverse();
 
     let (points, triangles) = utils::generate_triangular_mesh(&points, &[0, points.len()]);
     let ring = TriangleMesh {
         vertices: points.iter().map(|p| p.extend(0.0)).collect(),
         triangles,
+        normals: Vec::new(),
     }
     .reverse_winding_direction();
     ring.save_as_obj("ring.obj").unwrap();
@@ -176,13 +176,12 @@ fn test_cylinder_projection() {
             .map(|&p| cylinder.surface.generate_point_from_ring(p, d))
             .collect(),
         triangles: ring.triangles,
+        normals: Vec::new(),
     };
 
     cylinder.save_as_obj("cylinder.obj").unwrap();
 
     for i in 0..vertices.len() {
-        assert!((vertices[vertices.len() - i - 1] - cylinder.vertices[i])
-            .length()
-            .near(0.0));
+        assert!((vertices[i] - cylinder.vertices[i]).length().near(0.0));
     }
 }

@@ -185,6 +185,7 @@ fn test_gen_mesh() {
     crate::TriangleMesh {
         vertices: points.iter().map(|p| p.extend(0.0)).collect(),
         triangles,
+        normals: Vec::new(),
     }
     .save_as_obj("test.obj")
     .unwrap();

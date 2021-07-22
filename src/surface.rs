@@ -1,5 +1,5 @@
 use crate::curve::{Curve, CurveSegment};
-use crate::{utils::Tolerance, Float, Point2, Point3, TriangleMesh, Vec3};
+use crate::{utils, utils::Tolerance, Float, Grid, Point2, Point3, TriangleMesh, Vec3};
 use downcast_rs::{impl_downcast, Downcast};
 
 /// Parametric surface
@@ -46,6 +46,23 @@ impl<S: Surface> SurfacePatch<S> {
             .iter()
             .map(|p| self.surface.get_point(p.x, p.y))
             .collect::<Vec<Point3>>()
+    }
+
+    pub fn get_point_grid(&self) -> Grid<Point3> {
+        let (u_range, v_range) = self.parameter_range;
+        let (u_div, v_div) = self.parameter_division;
+        let u_parameters = utils::uniform_divide(u_range, u_div);
+        let v_parameters = utils::uniform_divide(v_range, v_div);
+        let points = u_parameters
+            .into_iter()
+            .map(|u| {
+                v_parameters
+                    .iter()
+                    .map(move |&v| self.surface.get_point(u, v))
+            })
+            .flatten()
+            .collect::<Vec<Point3>>();
+        Grid::from_vec(points, v_div + 1)
     }
 }
 
