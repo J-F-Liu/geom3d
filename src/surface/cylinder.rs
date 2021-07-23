@@ -142,7 +142,7 @@ fn test_cylinder_projection() {
         parameter_division: (16, 16),
     };
     let mesh = cylinder.get_triangle_mesh();
-    mesh.save_as_obj("mesh.obj").unwrap();
+    mesh.save_as_obj("tmp/mesh.obj").unwrap();
 
     let grid = cylinder.get_point_grid();
     // look from inside, extract boundary points in ccw order
@@ -168,7 +168,7 @@ fn test_cylinder_projection() {
         normals: Vec::new(),
     }
     .reverse_winding_direction();
-    ring.save_as_obj("ring.obj").unwrap();
+    ring.save_as_obj("tmp/ring.obj").unwrap();
 
     let cylinder = TriangleMesh {
         vertices: points
@@ -179,7 +179,7 @@ fn test_cylinder_projection() {
         normals: Vec::new(),
     };
 
-    cylinder.save_as_obj("cylinder.obj").unwrap();
+    cylinder.save_as_obj("tmp/cylinder.obj").unwrap();
 
     for i in 0..vertices.len() {
         assert!((vertices[i] - cylinder.vertices[i]).length().near(0.0));

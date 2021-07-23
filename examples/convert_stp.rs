@@ -9,7 +9,7 @@ fn main() {
     }
     if model.curves.len() > 0 {
         model
-            .save_as_svg(file.with_extension("svg"), (350.0, 245.0))
+            .save_as_svg(file.with_extension("svg"), (370.0, 245.0))
             .unwrap();
     }
 }
