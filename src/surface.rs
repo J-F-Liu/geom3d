@@ -102,6 +102,7 @@ mod cylinder;
 mod plane;
 mod spin;
 mod sweep;
+mod umbrella;
 
 pub use bezier::*;
 pub use bspline::*;
@@ -109,3 +110,4 @@ pub use cylinder::*;
 pub use plane::*;
 pub use spin::*;
 pub use sweep::*;
+pub use umbrella::*;

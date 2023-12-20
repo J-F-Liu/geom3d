@@ -14,6 +14,7 @@ mod face;
 mod knot;
 pub mod mesh;
 pub mod model;
+pub mod points;
 pub mod surface;
 pub mod utils;
 
