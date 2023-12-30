@@ -54,6 +54,7 @@ fn test_circle() {
     let segment = crate::curve::CurveSegment {
         curve: circle,
         parameter_range: (a, b),
+        tolerance: 0.01,
         parameter_division: 16,
     };
     dbg!(segment.get_points());

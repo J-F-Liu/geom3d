@@ -197,6 +197,7 @@ fn test_bspline_curve() {
     let segment = crate::curve::CurveSegment {
         curve: bspline,
         parameter_range: (a, b),
+        tolerance: 0.001,
         parameter_division: 16,
     };
     dbg!(segment.get_points());

@@ -65,6 +65,24 @@ pub fn uniform_divide(range: (Float, Float), division: usize) -> Vec<Float> {
     parameters
 }
 
+/// Creates the curve division
+pub fn parameter_division(curve: &dyn Curve, range: (Float, Float), tol: Float) -> Vec<Float> {
+    let p = 0.5 + (0.2 * rand::random::<Float>() - 0.1);
+    let t = range_at(range, p);
+    let pt0 = curve.get_point(range.0);
+    let pt1 = curve.get_point(range.1);
+    let mid = pt0 + (pt1 - pt0) * p;
+    if curve.get_point(t).distance(mid) < tol {
+        vec![range.0, range.1]
+    } else {
+        let mid = (range.0 + range.1) / 2.0;
+        let mut res = parameter_division(curve, (range.0, mid), tol);
+        let _ = res.pop();
+        res.extend(parameter_division(curve, (mid, range.1), tol));
+        res
+    }
+}
+
 pub fn range_at((start, end): (Float, Float), ratio: Float) -> Float {
     start + (end - start) * ratio
 }

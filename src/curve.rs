@@ -33,13 +33,25 @@ impl Curve for Box<dyn Curve> {
 pub struct CurveSegment<C: Curve> {
     pub curve: C,
     pub parameter_range: (Float, Float),
+    pub tolerance: Float,
     pub parameter_division: usize,
 }
 
 impl<C: Curve> CurveSegment<C> {
     /// Get sample points on the curve segment
     pub fn get_points(&self) -> Vec<Point3> {
-        let parameters = utils::uniform_divide(self.parameter_range, self.parameter_division);
+        // let parameters =
+        //     utils::uniform_divide(self.parameter_range, self.parameter_division, 0.01, 1.5);
+        let parameters =
+            utils::parameter_division(&self.curve, self.parameter_range, self.tolerance);
+        // println!(
+        //     "{}",
+        //     parameters
+        //         .iter()
+        //         .map(f64::to_string)
+        //         .collect::<Vec<_>>()
+        //         .join(",")
+        // );
         parameters
             .into_iter()
             .map(|u| self.curve.get_point(u))
