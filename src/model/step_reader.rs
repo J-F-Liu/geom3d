@@ -180,6 +180,7 @@ fn extract_edge_curve(
             return Some(CurveSegment {
                 curve,
                 parameter_range,
+                tolerance: 0.01,
                 parameter_division: 16,
             });
         }
@@ -406,6 +407,7 @@ fn extract_curve_segment(
                 return Some(CurveSegment {
                     curve: basis_curve,
                     parameter_range,
+                    tolerance: 0.01,
                     parameter_division: 16,
                 });
             }
